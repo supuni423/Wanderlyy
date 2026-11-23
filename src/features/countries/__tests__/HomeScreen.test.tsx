@@ -169,4 +169,55 @@ describe('HomeScreen', () => {
     await fireEvent.press(await screen.findByText('Japan'));
     expect(await screen.findByText('JPN')).toBeTruthy();
   });
+
+  describe('search and region filter', () => {
+    it('filters by search text after a short pause', async () => {
+      jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(listResponse(RAW));
+      await renderHome();
+      await screen.findByText('Japan');
+
+      await fireEvent.changeText(
+        screen.getByLabelText('Search countries'),
+        'vienna',
+      );
+
+      expect(await screen.findByText('1 of 2 countries')).toBeTruthy();
+      expect(screen.getByText('Austria')).toBeTruthy();
+      expect(screen.queryByText('Japan')).toBeNull();
+    });
+
+    it('filters by region chip', async () => {
+      jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(listResponse(RAW));
+      await renderHome();
+      await screen.findByText('Japan');
+
+      await fireEvent.press(screen.getByRole('tab', { name: 'Asia' }));
+
+      expect(await screen.findByText('1 of 2 countries')).toBeTruthy();
+      expect(screen.getByText('Japan')).toBeTruthy();
+      expect(screen.queryByText('Austria')).toBeNull();
+      expect(
+        screen.getByRole('tab', { name: 'Asia' }).props.accessibilityState,
+      ).toMatchObject({ selected: true });
+    });
+
+    it('shows "No matches" and can clear the filters', async () => {
+      jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(listResponse(RAW));
+      await renderHome();
+      await screen.findByText('Japan');
+
+      await fireEvent.changeText(
+        screen.getByLabelText('Search countries'),
+        'atlantis',
+      );
+      expect(await screen.findByText('No matches')).toBeTruthy();
+      expect(screen.getByText('Nothing matches "atlantis".')).toBeTruthy();
+
+      await fireEvent.press(
+        screen.getByRole('button', { name: 'Clear filters' }),
+      );
+      expect(await screen.findByText('2 countries to explore')).toBeTruthy();
+      expect(screen.getByLabelText('Search countries').props.value).toBe('');
+    });
+  });
 });

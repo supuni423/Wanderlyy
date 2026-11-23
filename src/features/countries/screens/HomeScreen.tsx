@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
@@ -8,7 +8,13 @@ import {
   type ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { EmptyState, ErrorState, LoadingIndicator } from '@/components';
+import {
+  EmptyState,
+  ErrorState,
+  LoadingIndicator,
+  SearchBar,
+} from '@/components';
+import { useDebouncedValue } from '@/hooks';
 import { useAppSelector } from '@/app/hooks';
 import { selectCurrentUser } from '@/features/auth';
 import type { HomeStackScreenProps } from '@/navigation/types';
@@ -16,18 +22,36 @@ import { useTheme } from '@/theme';
 import { useGetCountriesQuery } from '../countriesApi';
 import { getCountriesErrorMessage } from '../countriesErrors';
 import { COUNTRY_CARD_HEIGHT, CountryCard } from '../components/CountryCard';
+import { RegionChips } from '../components/RegionChips';
+import { filterCountries, type RegionFilter } from '../filterCountries';
 import type { CountrySummary } from '../types';
 
 /**
  * Home tab: every country as a card. Handles the four list states the
  * assignment asks for: loading, error (with retry), empty and data.
- * Pull down to refresh.
+ * Search (debounced) and region chips narrow the list. Pull to refresh.
  */
 export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
   const { colors, typography, spacing } = useTheme();
   const user = useAppSelector(selectCurrentUser);
   const { data, error, isLoading, isFetching, refetch } =
     useGetCountriesQuery();
+
+  const [query, setQuery] = useState('');
+  const [region, setRegion] = useState<RegionFilter>('All');
+  // Filter once typing pauses, not on every keystroke.
+  const debouncedQuery = useDebouncedValue(query, 250);
+
+  const countries = useMemo(
+    () => filterCountries(data ?? [], { query: debouncedQuery, region }),
+    [data, debouncedQuery, region],
+  );
+  const isFiltered = debouncedQuery.trim() !== '' || region !== 'All';
+
+  const clearFilters = useCallback(() => {
+    setQuery('');
+    setRegion('All');
+  }, []);
 
   // Used by both "Try again" and pull-to-refresh.
   const retry = useCallback(() => {
@@ -47,7 +71,7 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
   );
 
   const header = (
-    <View style={{ padding: spacing.lg, paddingBottom: spacing.md }}>
+    <View style={{ padding: spacing.lg, paddingBottom: spacing.sm }}>
       <Text style={[typography.body, { color: colors.textMuted }]}>
         Hello, {user?.firstName ?? 'traveller'}
       </Text>
@@ -67,10 +91,27 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
             typography.accent,
             { color: colors.textMuted, marginTop: spacing.xs },
           ]}
+          accessibilityLiveRegion="polite"
         >
-          {data.length} countries to explore
+          {isFiltered
+            ? `${countries.length} of ${data.length} countries`
+            : `${data.length} countries to explore`}
         </Text>
       )}
+    </View>
+  );
+
+  const filters = !!data && data.length > 0 && (
+    <View style={{ gap: spacing.xs, paddingBottom: spacing.sm }}>
+      <View style={{ paddingHorizontal: spacing.lg }}>
+        <SearchBar
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search by country, capital or code"
+          accessibilityLabel="Search countries"
+        />
+      </View>
+      <RegionChips selected={region} onSelect={setRegion} />
     </View>
   );
 
@@ -89,7 +130,7 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
   } else {
     content = (
       <FlatList
-        data={data ?? []}
+        data={countries}
         keyExtractor={item => item.code}
         renderItem={renderItem}
         getItemLayout={(_, index) => ({
@@ -101,13 +142,31 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
         maxToRenderPerBatch={10}
         windowSize={7}
         removeClippedSubviews
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <EmptyState
-            icon="globe"
-            title="No countries yet"
-            message="The country list came back empty. Pull down to try again."
-          />
+          isFiltered ? (
+            <EmptyState
+              icon="search"
+              title="No matches"
+              message={
+                debouncedQuery.trim()
+                  ? `Nothing matches "${debouncedQuery.trim()}"${
+                      region === 'All' ? '' : ` in ${region}`
+                    }.`
+                  : `No countries in ${region}.`
+              }
+              actionLabel="Clear filters"
+              onAction={clearFilters}
+            />
+          ) : (
+            <EmptyState
+              icon="globe"
+              title="No countries yet"
+              message="The country list came back empty. Pull down to try again."
+            />
+          )
         }
         refreshControl={
           <RefreshControl
@@ -128,6 +187,7 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
       edges={['top']}
     >
       {header}
+      {filters}
       {content}
     </SafeAreaView>
   );
