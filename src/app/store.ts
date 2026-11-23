@@ -15,6 +15,7 @@ import { countriesApi } from '@/features/countries/countriesApi';
 import { favouritesReducer } from '@/features/favourites/favouritesSlice';
 import { countriesCacheReducer } from '@/features/offline/countriesCacheSlice';
 import { networkReducer } from '@/features/offline/networkSlice';
+import { themeReducer } from '@/features/settings/themeSlice';
 import { authPersistConfig, rootPersistConfig } from './persistence';
 
 /**
@@ -28,6 +29,7 @@ const reducers = {
   favourites: favouritesReducer,
   countriesCache: countriesCacheReducer,
   network: networkReducer,
+  theme: themeReducer,
   [authApi.reducerPath]: authApi.reducer,
   [countriesApi.reducerPath]: countriesApi.reducer,
 };

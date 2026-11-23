@@ -4,7 +4,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import type { Persistor } from 'redux-persist';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SplashScreen } from '@/features/onboarding';
-import { ThemeProvider } from '@/theme';
+import { AppThemeProvider } from '@/features/settings/AppThemeProvider';
 import { EntryFlow } from './EntryFlow';
 import type { Store } from '@reduxjs/toolkit';
 import { makePersistedStore } from './store';
@@ -20,7 +20,8 @@ interface AppProps {
 }
 
 /**
- * Root component: Redux, saved-state restore, safe area and theme.
+ * Root component: Redux, theme (light/dark), saved-state restore and
+ * safe area.
  * PersistGate keeps the splash up until favourites and the profile
  * have been read back from AsyncStorage.
  */
@@ -30,21 +31,24 @@ function App({
 }: AppProps) {
   const content: ReactNode = (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <EntryFlow />
-      </ThemeProvider>
+      <EntryFlow />
     </SafeAreaProvider>
   );
 
+  // The theme sits outside PersistGate so even the loading splash uses
+  // the right colours (before the saved preference loads it follows the
+  // phone's setting).
   return (
     <Provider store={store}>
-      {persistor ? (
-        <PersistGate persistor={persistor} loading={<SplashScreen />}>
-          {content}
-        </PersistGate>
-      ) : (
-        content
-      )}
+      <AppThemeProvider>
+        {persistor ? (
+          <PersistGate persistor={persistor} loading={<SplashScreen />}>
+            {content}
+          </PersistGate>
+        ) : (
+          content
+        )}
+      </AppThemeProvider>
     </Provider>
   );
 }

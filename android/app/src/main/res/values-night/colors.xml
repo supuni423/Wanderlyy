@@ -1,0 +1,4 @@
+<resources>
+    <!-- Dark launch background when the phone is in dark mode (no white flash). -->
+    <color name="splash_background">#17130F</color>
+</resources>

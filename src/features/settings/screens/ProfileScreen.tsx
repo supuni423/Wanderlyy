@@ -15,6 +15,7 @@ import { resetOnboarding } from '@/features/onboarding';
 import { useTheme } from '@/theme';
 import { version as APP_VERSION } from '../../../../package.json';
 import { SettingsRow } from '../components/SettingsRow';
+import { ThemeSelector } from '../components/ThemeSelector';
 
 /**
  * Profile tab: who is signed in, a few travel stats from the wishlist,
@@ -83,6 +84,7 @@ export function ProfileScreen() {
     <SafeAreaView
       style={[styles.screen, { backgroundColor: colors.background }]}
       edges={['top']}
+      testID="profile-screen"
     >
       <ScrollView
         contentContainerStyle={{ padding: spacing.lg, gap: spacing.lg }}
@@ -142,6 +144,16 @@ export function ProfileScreen() {
             value={latest}
             tone={colors.accentGreen}
           />
+        </View>
+
+        <View style={{ gap: spacing.sm }}>
+          <Text
+            style={[typography.h2, typography.accent, { color: colors.text }]}
+            accessibilityRole="header"
+          >
+            Appearance
+          </Text>
+          <ThemeSelector />
         </View>
 
         <Section title="Your travel journal">

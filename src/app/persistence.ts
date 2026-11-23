@@ -5,7 +5,8 @@ import type { PersistConfig, PersistedState } from 'redux-persist';
  * What is saved to AsyncStorage (and what is not).
  *
  * Saved:     favourites (whole slice), countriesCache (offline copy of
- *            the country list + viewed details), auth.user (profile only)
+ *            the country list + viewed details), theme preference,
+ *            auth.user (profile only)
  * Not saved: auth.status (recomputed at start-up), API caches,
  *            and NEVER the access/refresh tokens (they live in the Keychain).
  */
@@ -33,7 +34,19 @@ export function sanitizePersistedState(state: Stored): Stored {
   if (!state) {
     return state;
   }
-  return sanitizeCountriesCache(sanitizeFavourites(state));
+  return sanitizeTheme(sanitizeCountriesCache(sanitizeFavourites(state)));
+}
+
+/** An unknown theme value falls back to following the phone. */
+function sanitizeTheme(state: Stored): Stored {
+  const theme = state.theme;
+  if (theme === undefined) {
+    return state;
+  }
+  const valid =
+    isObject(theme) &&
+    ['system', 'light', 'dark'].includes(theme.preference as string);
+  return valid ? state : { ...state, theme: { preference: 'system' } };
 }
 
 /** A damaged offline cache is simply dropped; it refills when online. */
@@ -102,7 +115,7 @@ export const rootPersistConfig = {
   storage: AsyncStorage,
   version: PERSIST_VERSION,
   // auth has its own nested config (above) so only `user` is saved.
-  whitelist: ['favourites', 'countriesCache'],
+  whitelist: ['favourites', 'countriesCache', 'theme'],
   migrate: async (state: PersistedState) =>
     sanitizePersistedState(state as Stored),
 } satisfies Partial<PersistConfig<unknown>>;
