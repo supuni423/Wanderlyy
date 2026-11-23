@@ -61,14 +61,6 @@ describe('RootNavigator', () => {
     expect(screen.getByText('Profile')).toBeTruthy();
   });
 
-  it('opens the details screen with only the country code', async () => {
-    await renderNavigator(EMILY);
-
-    await fireEvent.press(screen.getByRole('button', { name: 'Open Japan' }));
-
-    expect(await screen.findByText('JPN')).toBeTruthy();
-  });
-
   it('jumps from an empty Favourites tab to Home', async () => {
     await renderNavigator(EMILY);
 

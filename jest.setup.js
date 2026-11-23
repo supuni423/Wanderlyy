@@ -38,3 +38,8 @@ jest.mock(
   'react-native-safe-area-context',
   () => require('react-native-safe-area-context/jest/mock').default,
 );
+
+// Use a fake API key in tests instead of the real one from .env.
+jest.mock('@/services/config', () => ({
+  config: { restCountriesApiKey: 'test-key' },
+}));
