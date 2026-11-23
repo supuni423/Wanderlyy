@@ -54,9 +54,9 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
     isFetching,
     refetch,
   } = useGetCountriesQuery(undefined, {
-    // No point asking while offline if we have a saved list; the request
-    // runs by itself as soon as the connection is back.
-    skip: isOffline && !!cached,
+    // No point asking while offline: the saved list (if any) is shown,
+    // and the request runs by itself as soon as the connection is back.
+    skip: isOffline,
   });
   const data = live ?? cached?.data;
   const showingSavedCopy = !live && !!cached;

@@ -7,7 +7,7 @@ import {
   hasSeenOnboarding,
   markOnboardingSeen,
 } from '@/features/onboarding';
-import { startNetworkMonitor } from '@/features/offline';
+import { ReconnectToast, startNetworkMonitor } from '@/features/offline';
 import { RootNavigator } from '@/navigation';
 import { useTheme } from '@/theme';
 import { useAppDispatch, useAppSelector } from './hooks';
@@ -28,7 +28,8 @@ export function EntryFlow() {
   const [seenIntro, setSeenIntro] = useState<boolean | null>(null);
   const [splashTimeUp, setSplashTimeUp] = useState(false);
 
-  // Follow the connection for the whole life of the app.
+  // Follow the connection for the whole life of the app (also tells
+  // RTK Query when the phone comes back online, so data refreshes).
   useEffect(() => startNetworkMonitor(dispatch), [dispatch]);
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export function EntryFlow() {
         barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}
       />
       {screen}
+      {!loading && <ReconnectToast />}
     </>
   );
 }

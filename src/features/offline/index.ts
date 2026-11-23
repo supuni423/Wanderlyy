@@ -24,3 +24,5 @@ export {
 } from './networkSlice';
 export { startNetworkMonitor } from './networkMonitor';
 export { useNetworkStatus, type NetworkStatusInfo } from './useNetworkStatus';
+export { syncAfterReconnect, MAX_PAGES_PER_SYNC } from './offlineSync';
+export { ReconnectToast, RECONNECT_TOAST_MS } from './ReconnectToast';

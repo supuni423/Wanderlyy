@@ -16,6 +16,9 @@ import type {
 
 export const RESTCOUNTRIES_URL = 'https://api.restcountries.com/countries/v5';
 
+/** Data older than this is refreshed on reconnect or when a screen opens. */
+export const STALE_AFTER_SECONDS = 30 * 60;
+
 /** Free plan allows at most 100 records per request (249 countries = 3). */
 export const PAGE_SIZE = 100;
 /** Safety stop so a server bug can never cause an endless request loop. */
@@ -77,6 +80,10 @@ export const countriesApi = createApi({
   baseQuery,
   // Country data changes rarely; keep it for an hour after the last use.
   keepUnusedDataFor: 60 * 60,
+  // Screens skip their queries while offline; when the connection
+  // returns they resume and refresh only if the data is older than
+  // 30 min (also when a screen opens). This protects the monthly quota.
+  refetchOnMountOrArgChange: STALE_AFTER_SECONDS,
   endpoints: build => ({
     getCountries: build.query<CountrySummary[], void>({
       async queryFn(_arg, _api, _extra, fetchPage) {
