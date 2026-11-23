@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import { AppButton } from '@/components';
 import {
   OnboardingScreen,
   SplashScreen,
@@ -7,7 +8,7 @@ import {
   markOnboardingSeen,
   resetOnboarding,
 } from '@/features/onboarding';
-import { getButtonStyles, useTheme } from '@/theme';
+import { useTheme } from '@/theme';
 
 type Stage = 'splash' | 'onboarding' | 'ready';
 
@@ -60,9 +61,7 @@ export function EntryFlow() {
 }
 
 function ReadyPlaceholder({ onReplay }: { onReplay: () => void }) {
-  const theme = useTheme();
-  const { colors, typography, spacing } = theme;
-  const button = getButtonStyles(theme, 'outline');
+  const { colors, typography, spacing } = useTheme();
   return (
     <View style={[styles.ready, { backgroundColor: colors.background }]}>
       <Text style={[typography.h1, { color: colors.text }]}>
@@ -78,13 +77,12 @@ function ReadyPlaceholder({ onReplay }: { onReplay: () => void }) {
       >
         Sign in comes in the next build step.
       </Text>
-      <Pressable
+      <AppButton
+        title="Replay intro"
+        icon="rotate-ccw"
+        variant="outline"
         onPress={onReplay}
-        accessibilityRole="button"
-        style={button.container}
-      >
-        <Text style={button.label}>Replay intro</Text>
-      </Pressable>
+      />
     </View>
   );
 }

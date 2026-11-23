@@ -23,7 +23,13 @@ describe('component styles', () => {
   const theme = createTheme('light');
 
   it('gives every button a touch target of at least 48dp', () => {
-    const variants = ['primary', 'secondary', 'outline', 'danger'] as const;
+    const variants = [
+      'primary',
+      'secondary',
+      'outline',
+      'danger',
+      'ink',
+    ] as const;
     for (const variant of variants) {
       const { container } = getButtonStyles(theme, variant);
       expect(container.minHeight).toBeGreaterThanOrEqual(48);

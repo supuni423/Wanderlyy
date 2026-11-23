@@ -6,7 +6,12 @@ import type { Theme } from './theme';
  * gets the same sizes, colours and touch targets.
  */
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'danger'
+  | 'ink';
 
 export function getButtonStyles(
   theme: Theme,
@@ -20,19 +25,21 @@ export function getButtonStyles(
     secondary: colors.primaryMuted,
     outline: 'transparent',
     danger: colors.danger,
+    ink: colors.ink,
   };
   const foreground: Record<ButtonVariant, string> = {
     primary: colors.onPrimary,
     secondary: colors.text,
     outline: colors.primary,
     danger: colors.onPrimary,
+    ink: colors.onInk,
   };
 
   return {
     container: {
       minHeight: touchTarget,
       paddingHorizontal: spacing.lg,
-      borderRadius: radius.md,
+      borderRadius: radius.pill,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
