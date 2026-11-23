@@ -1,6 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import App from '../App';
+import { makeStore } from '../store';
 import { SPLASH_MIN_MS } from '../EntryFlow';
 import { hasSeenOnboarding } from '@/features/onboarding';
 
@@ -22,12 +29,12 @@ describe('App entry flow', () => {
   });
 
   it('shows the splash screen first', async () => {
-    await render(<App />);
+    await render(<App store={makeStore()} />);
     expect(screen.getByLabelText('Wanderlyy is loading')).toBeTruthy();
   });
 
   it('shows the intro on first launch, then the login screen', async () => {
-    await render(<App />);
+    await render(<App store={makeStore()} />);
     await finishSplash();
 
     expect(screen.getByLabelText('Skip intro')).toBeTruthy();
@@ -39,7 +46,7 @@ describe('App entry flow', () => {
 
   it('goes straight to login when the intro was already seen', async () => {
     await AsyncStorage.setItem('wanderlyy/onboarding-seen', 'true');
-    await render(<App />);
+    await render(<App store={makeStore()} />);
     await finishSplash();
 
     expect(screen.queryByLabelText('Skip intro')).toBeNull();
@@ -48,7 +55,7 @@ describe('App entry flow', () => {
 
   it('switches between login and registration', async () => {
     await AsyncStorage.setItem('wanderlyy/onboarding-seen', 'true');
-    await render(<App />);
+    await render(<App store={makeStore()} />);
     await finishSplash();
 
     await fireEvent.press(screen.getByRole('link'));
@@ -56,5 +63,54 @@ describe('App entry flow', () => {
 
     await fireEvent.press(screen.getByRole('link'));
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
+  });
+
+  describe('signing in', () => {
+    function mockLoginResponse(status: number, body: object) {
+      jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(JSON.stringify(body), {
+          status,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+    }
+
+    async function signInWithDemoAccount() {
+      await AsyncStorage.setItem('wanderlyy/onboarding-seen', 'true');
+      await render(<App store={makeStore()} />);
+      await finishSplash();
+      await fireEvent.press(screen.getByLabelText('Use demo account'));
+      await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    }
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('shows the signed-in screen after a successful login', async () => {
+      mockLoginResponse(200, {
+        id: 1,
+        username: 'emilys',
+        email: 'emily@example.com',
+        firstName: 'Emily',
+        lastName: 'Johnson',
+        image: 'https://dummyjson.com/icon/emilys/128',
+        accessToken: 'a',
+        refreshToken: 'r',
+      });
+      await signInWithDemoAccount();
+
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Log out' })).toBeTruthy(),
+      );
+      expect(screen.getByText('Emily')).toBeTruthy();
+    });
+
+    it('shows an error when the password is wrong', async () => {
+      mockLoginResponse(400, { message: 'Invalid credentials' });
+      await signInWithDemoAccount();
+
+      expect(
+        await screen.findByText('Wrong username or password.'),
+      ).toBeTruthy();
+    });
   });
 });

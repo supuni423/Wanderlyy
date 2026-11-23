@@ -5,6 +5,7 @@ import { AuthHeader } from '../components/AuthHeader';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthSwitchLink } from '../components/AuthSwitchLink';
 import { DemoAccountNote } from '../components/DemoAccountNote';
+import { FormError } from '../components/FormError';
 import { FormInput } from '../components/FormInput';
 import { DEMO_ACCOUNT } from '../demoAccount';
 import { loginSchema, type LoginValues } from '../validation';
@@ -14,12 +15,15 @@ export interface LoginScreenProps {
   onSubmit: (values: LoginValues) => void;
   onGoToRegister: () => void;
   submitting?: boolean;
+  /** Server or network error from the last attempt. */
+  errorMessage?: string;
 }
 
 export function LoginScreen({
   onSubmit,
   onGoToRegister,
   submitting = false,
+  errorMessage,
 }: LoginScreenProps) {
   const { control, handleSubmit, reset, setFocus } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -74,6 +78,7 @@ export function LoginScreen({
         onSubmitEditing={submit}
       />
 
+      <FormError message={errorMessage} />
       <AppButton
         title="Sign in"
         icon="arrow-right"

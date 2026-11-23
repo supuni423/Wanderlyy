@@ -6,6 +6,7 @@ import { useTheme } from '@/theme';
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthSwitchLink } from '../components/AuthSwitchLink';
+import { FormError } from '../components/FormError';
 import { FormInput } from '../components/FormInput';
 import { registerSchema, type RegisterValues } from '../validation';
 
@@ -14,6 +15,8 @@ export interface RegisterScreenProps {
   onSubmit: (values: RegisterValues) => void;
   onGoToLogin: () => void;
   submitting?: boolean;
+  /** Server or network error from the last attempt. */
+  errorMessage?: string;
 }
 
 const EMPTY: RegisterValues = {
@@ -29,6 +32,7 @@ export function RegisterScreen({
   onSubmit,
   onGoToLogin,
   submitting = false,
+  errorMessage,
 }: RegisterScreenProps) {
   const { spacing } = useTheme();
   const { control, handleSubmit, setFocus, trigger, formState } =
@@ -134,6 +138,7 @@ export function RegisterScreen({
         onSubmitEditing={submit}
       />
 
+      <FormError message={errorMessage} />
       <AppButton
         title="Create account"
         icon="arrow-right"
