@@ -1,0 +1,99 @@
+{
+  "data": {
+    "objects": [
+      {
+        "names": {
+          "common": "Japan",
+          "official": "Japan"
+        },
+        "codes": {
+          "alpha_2": "JP",
+          "alpha_3": "JPN"
+        },
+        "capitals": [
+          {
+            "attributes": {
+              "administrative": false,
+              "constitutional": false,
+              "executive": false,
+              "judicial": false,
+              "legislative": false,
+              "primary": true
+            },
+            "coordinates": {
+              "lat": 35.68,
+              "lng": 139.75
+            },
+            "name": "Tokyo"
+          }
+        ],
+        "region": "Asia",
+        "subregion": "Eastern Asia",
+        "population": 122430000,
+        "flag": {
+          "emoji": "🇯🇵",
+          "url_png": "https://flags.restcountries.com/v5/w640/jp.png",
+          "description": "The flag of Japan features a crimson-red circle at the center of a white field."
+        },
+        "area": {
+          "kilometers": 377930,
+          "miles": 145919.5
+        },
+        "languages": [
+          {
+            "bcp47": "ja",
+            "iso639_1": "ja",
+            "iso639_2b": "jpn",
+            "iso639_2t": "jpn",
+            "iso639_3": "jpn",
+            "name": "Japanese",
+            "native_name": "日本語"
+          }
+        ],
+        "currencies": [
+          {
+            "code": "JPY",
+            "name": "Japanese yen",
+            "symbol": "¥"
+          }
+        ],
+        "timezones": [
+          "UTC+09:00"
+        ],
+        "borders": [],
+        "continents": [
+          "Asia"
+        ],
+        "landlocked": false,
+        "cars": {
+          "driving_side": "left",
+          "signs": [
+            "J"
+          ]
+        },
+        "calling_codes": [
+          "81"
+        ],
+        "tlds": [
+          ".jp",
+          ".みんな"
+        ],
+        "demonyms": {
+          "eng": {
+            "f": "Japanese",
+            "m": "Japanese"
+          }
+        },
+        "coordinates": {
+          "lat": 36,
+          "lng": 138
+        }
+      }
+    ],
+    "meta": {
+      "total": 1,
+      "count": 1,
+      "more": false
+    }
+  }
+}

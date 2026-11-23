@@ -9,7 +9,10 @@ import { DEMO_ACCOUNT, LoginScreen, RegisterScreen } from '@/features/auth';
 
 /** Validation runs asynchronously, so wait for the submitted values. */
 async function expectSubmitted(onSubmit: jest.Mock, values: object) {
-  await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  // Generous timeout: the first run also compiles Zod, which can be slow.
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1), {
+    timeout: 5000,
+  });
   expect(onSubmit.mock.calls[0][0]).toEqual(values);
 }
 

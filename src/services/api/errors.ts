@@ -6,6 +6,8 @@ type ApiError = FetchBaseQueryError | SerializedError | undefined;
 interface ErrorMessages {
   /** Shown for 400/401 responses, e.g. "Wrong username or password". */
   badRequest?: string;
+  /** Messages for specific HTTP statuses (checked before badRequest). */
+  byStatus?: Partial<Record<number, string>>;
   fallback?: string;
 }
 
@@ -31,6 +33,9 @@ export function getApiErrorMessage(
   }
   if (error.status === 'FETCH_ERROR' || error.status === 'TIMEOUT_ERROR') {
     return NETWORK_ERROR_MESSAGE;
+  }
+  if (typeof error.status === 'number' && messages.byStatus?.[error.status]) {
+    return messages.byStatus[error.status];
   }
   if (error.status === 400 || error.status === 401) {
     return messages.badRequest ?? serverMessage(error) ?? fallback;
