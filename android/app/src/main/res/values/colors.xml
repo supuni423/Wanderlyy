@@ -1,0 +1,4 @@
+<resources>
+    <!-- Matches the app's cream background so launch has no white flash. -->
+    <color name="splash_background">#FBF6EF</color>
+</resources>
