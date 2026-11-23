@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
-import { AuthFlow, restoreSession, selectAuthStatus } from '@/features/auth';
+import { restoreSession, selectAuthStatus } from '@/features/auth';
 import {
   OnboardingScreen,
   SplashScreen,
   hasSeenOnboarding,
   markOnboardingSeen,
 } from '@/features/onboarding';
+import { RootNavigator } from '@/navigation';
 import { useTheme } from '@/theme';
 import { useAppDispatch, useAppSelector } from './hooks';
-import { SignedInPlaceholder } from './SignedInPlaceholder';
 
 /** Keep the splash up long enough to be seen, even on a fast phone. */
 export const SPLASH_MIN_MS = 1200;
@@ -18,8 +18,7 @@ export const SPLASH_MIN_MS = 1200;
  * App entry. The splash stays up until three things are done:
  * the minimum splash time, reading the "intro seen" flag, and
  * restoring the saved session from the Keychain. Then it shows the
- * intro (first launch), the auth screens, or the signed-in app.
- * React Navigation takes over in a later commit.
+ * intro (first launch) or the navigator (auth stack or tabs).
  */
 export function EntryFlow() {
   const { mode } = useTheme();
@@ -56,10 +55,8 @@ export function EntryFlow() {
     screen = <SplashScreen />;
   } else if (!seenIntro) {
     screen = <OnboardingScreen onDone={finishOnboarding} />;
-  } else if (authStatus === 'authenticated') {
-    screen = <SignedInPlaceholder />;
   } else {
-    screen = <AuthFlow />;
+    screen = <RootNavigator />;
   }
 
   return (

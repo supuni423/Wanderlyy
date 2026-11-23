@@ -1,11 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import App from '../App';
 import { makeStore } from '../store';
 import { SPLASH_MIN_MS } from '../EntryFlow';
@@ -100,10 +94,9 @@ describe('App entry flow', () => {
       });
       await signInWithDemoAccount();
 
-      await waitFor(() =>
-        expect(screen.getByRole('button', { name: 'Log out' })).toBeTruthy(),
-      );
-      expect(screen.getByText('Emily')).toBeTruthy();
+      // The tabs replace the auth stack; Home greets the user.
+      expect(await screen.findByText('Hello, Emily')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Sign in' })).toBeNull();
     });
 
     it('restores a saved session when the app is reopened', async () => {
@@ -121,9 +114,7 @@ describe('App entry flow', () => {
       await render(<App store={makeStore()} />);
       await finishSplash();
 
-      await waitFor(() =>
-        expect(screen.getByRole('button', { name: 'Log out' })).toBeTruthy(),
-      );
+      expect(await screen.findByText('Hello, Emily')).toBeTruthy();
       expect(screen.queryByRole('button', { name: 'Sign in' })).toBeNull();
     });
 

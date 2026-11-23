@@ -115,7 +115,7 @@ export function RegisterScreen({
         label="Password"
         icon="lock"
         secure
-        placeholder="6+ characters, a letter and a number"
+        placeholder="6+ letters and numbers"
         autoCapitalize="none"
         autoComplete="password-new"
         onSubmitEditing={next('confirmPassword')}

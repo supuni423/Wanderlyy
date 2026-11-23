@@ -6,7 +6,7 @@ export {
   RegisterScreen,
   type RegisterScreenProps,
 } from './screens/RegisterScreen';
-export { AuthFlow } from './AuthFlow';
+export { LoginRoute, RegisterRoute } from './AuthRoutes';
 export { authApi, useLoginMutation, useRegisterMutation } from './authApi';
 export {
   authReducer,
