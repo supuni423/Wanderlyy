@@ -40,6 +40,10 @@ const favouritesSlice = createSlice({
         return { payload: { ...country, savedAt: Date.now() } };
       },
     },
+    /** Puts a removed favourite back exactly as it was (used by Undo). */
+    restoreFavourite(state, action: PayloadAction<FavouriteCountry>) {
+      adapter.upsertOne(state, action.payload);
+    },
     removeFavourite(state, action: PayloadAction<string>) {
       adapter.removeOne(state, action.payload);
     },
@@ -49,8 +53,12 @@ const favouritesSlice = createSlice({
   },
 });
 
-export const { toggleFavourite, removeFavourite, clearFavourites } =
-  favouritesSlice.actions;
+export const {
+  toggleFavourite,
+  restoreFavourite,
+  removeFavourite,
+  clearFavourites,
+} = favouritesSlice.actions;
 export const favouritesReducer = favouritesSlice.reducer;
 
 type WithFavourites = { favourites: FavouritesState };

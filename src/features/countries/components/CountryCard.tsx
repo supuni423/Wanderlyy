@@ -15,9 +15,16 @@ interface CountryCardProps {
   onPress: (code: string) => void;
   /** Alternates the flag's tilt so the list feels hand-made. */
   index?: number;
+  /** Told when the heart is tapped (e.g. so Favourites can offer Undo). */
+  onFavouriteChange?: (country: CountrySummary, saved: boolean) => void;
 }
 
-function CountryCardBase({ country, onPress, index = 0 }: CountryCardProps) {
+function CountryCardBase({
+  country,
+  onPress,
+  index = 0,
+  onFavouriteChange,
+}: CountryCardProps) {
   const { colors, typography, radius, spacing } = useTheme();
   const tone = regionTone(country.region, colors);
   const tilt = index % 2 === 0 ? '-3deg' : '2deg';
@@ -99,7 +106,10 @@ function CountryCardBase({ country, onPress, index = 0 }: CountryCardProps) {
         </View>
       </View>
 
-      <FavouriteButton country={country} />
+      <FavouriteButton
+        country={country}
+        onChange={saved => onFavouriteChange?.(country, saved)}
+      />
     </Pressable>
   );
 }

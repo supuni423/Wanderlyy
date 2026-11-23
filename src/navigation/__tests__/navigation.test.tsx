@@ -1,6 +1,7 @@
 import { Provider } from 'react-redux';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Alert } from 'react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { makeStore } from '@/app/store';
 import { ThemeProvider } from '@/theme';
 import type { AuthState } from '@/features/auth';
@@ -31,6 +32,8 @@ async function renderNavigator(auth: AuthState) {
   );
   return store;
 }
+
+afterEach(() => jest.restoreAllMocks());
 
 describe('RootNavigator', () => {
   it('shows the auth stack when signed out', async () => {
@@ -78,7 +81,14 @@ describe('RootNavigator', () => {
 
     await fireEvent.press(screen.getByText('Profile'));
     expect(await screen.findByText('Emily Johnson')).toBeTruthy();
+    const alert = jest.spyOn(Alert, 'alert');
     await fireEvent.press(screen.getByRole('button', { name: 'Log out' }));
+
+    // Logging out asks for confirmation first.
+    const buttons = alert.mock.calls[0][2] ?? [];
+    await act(async () => {
+      buttons.find(b => b.text === 'Log out')?.onPress?.();
+    });
 
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeTruthy();
     expect(store.getState().auth.status).toBe('unauthenticated');

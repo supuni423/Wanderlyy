@@ -7,6 +7,7 @@ export {
   clearFavourites,
   favouritesReducer,
   removeFavourite,
+  restoreFavourite,
   selectFavouriteCount,
   selectFavourites,
   selectIsFavourite,

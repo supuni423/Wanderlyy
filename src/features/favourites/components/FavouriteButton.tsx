@@ -10,6 +10,8 @@ interface FavouriteButtonProps {
   country: CountrySummary;
   /** "card": round sticker on list cards. "header": plain icon in a nav bar. */
   variant?: 'card' | 'header';
+  /** Called after a tap with the new state (true = now saved). */
+  onChange?: (saved: boolean) => void;
 }
 
 /**
@@ -20,6 +22,7 @@ interface FavouriteButtonProps {
 export function FavouriteButton({
   country,
   variant = 'card',
+  onChange,
 }: FavouriteButtonProps) {
   const { colors, touchTarget } = useTheme();
   const dispatch = useAppDispatch();
@@ -28,6 +31,7 @@ export function FavouriteButton({
 
   const onPress = () => {
     dispatch(toggleFavourite(country));
+    onChange?.(!saved);
     scale.setValue(0.7);
     Animated.spring(scale, {
       toValue: 1,

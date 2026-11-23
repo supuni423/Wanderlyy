@@ -8,6 +8,9 @@ export {
   useGetCountryByCodeQuery,
 } from './countriesApi';
 export { getCountriesErrorMessage } from './countriesErrors';
+export { CountryCard, COUNTRY_CARD_HEIGHT } from './components/CountryCard';
+export { FactRow, Section, StatTile } from './components/DetailsParts';
+export { regionTone } from './regionTone';
 export type {
   CountryDetails,
   CountrySummary,
