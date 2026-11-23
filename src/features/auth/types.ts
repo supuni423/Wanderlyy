@@ -1,15 +1,5 @@
-/** Values the login form collects. */
-export interface LoginValues {
-  username: string;
-  password: string;
-}
-
-/** Values the registration form collects (sent to DummyJSON /users/add). */
-export interface RegisterValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
-  password: string;
-  confirmPassword: string;
-}
+/**
+ * Form value types come straight from the Zod schemas, so the
+ * types and the validation rules can never drift apart.
+ */
+export type { LoginValues, RegisterValues } from './validation';

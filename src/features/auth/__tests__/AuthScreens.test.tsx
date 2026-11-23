@@ -1,6 +1,17 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { ThemeProvider } from '@/theme';
 import { DEMO_ACCOUNT, LoginScreen, RegisterScreen } from '@/features/auth';
+
+/** Validation runs asynchronously, so wait for the submitted values. */
+async function expectSubmitted(onSubmit: jest.Mock, values: object) {
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  expect(onSubmit.mock.calls[0][0]).toEqual(values);
+}
 
 describe('LoginScreen', () => {
   async function renderLogin() {
@@ -20,10 +31,28 @@ describe('LoginScreen', () => {
     await fireEvent.changeText(screen.getByLabelText('Password'), 'secret123');
     await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
 
-    expect(onSubmit).toHaveBeenCalledWith({
+    await expectSubmitted(onSubmit, {
       username: 'traveller',
       password: 'secret123',
     });
+  });
+
+  it('shows errors and does not submit an empty form', async () => {
+    const { onSubmit } = await renderLogin();
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(await screen.findByText('Enter your username')).toBeTruthy();
+    expect(screen.getByText('Enter your password')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('trims spaces before submitting', async () => {
+    const { onSubmit } = await renderLogin();
+    await fireEvent.changeText(screen.getByLabelText('Username'), ' emilys ');
+    await fireEvent.changeText(screen.getByLabelText('Password'), 'emilyspass');
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+
+    await expectSubmitted(onSubmit, DEMO_ACCOUNT);
   });
 
   it('fills in the demo account with one tap', async () => {
@@ -31,7 +60,7 @@ describe('LoginScreen', () => {
     await fireEvent.press(screen.getByLabelText('Use demo account'));
     await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
 
-    expect(onSubmit).toHaveBeenCalledWith(DEMO_ACCOUNT);
+    await expectSubmitted(onSubmit, DEMO_ACCOUNT);
   });
 
   it('links to the registration screen', async () => {
@@ -68,7 +97,7 @@ describe('RegisterScreen', () => {
       screen.getByRole('button', { name: 'Create account' }),
     );
 
-    expect(onSubmit).toHaveBeenCalledWith({
+    await expectSubmitted(onSubmit, {
       firstName: 'Ada',
       lastName: 'Lovelace',
       email: 'ada@example.com',
@@ -76,6 +105,21 @@ describe('RegisterScreen', () => {
       password: 'engine42',
       confirmPassword: 'engine42',
     });
+  });
+
+  it('blocks submission when the passwords differ', async () => {
+    const { onSubmit } = await renderRegister();
+    await fireEvent.changeText(screen.getByLabelText('Password'), 'engine42');
+    await fireEvent.changeText(
+      screen.getByLabelText('Confirm password'),
+      'engine43',
+    );
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Create account' }),
+    );
+
+    expect(await screen.findByText('Passwords do not match')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('links back to the login screen', async () => {

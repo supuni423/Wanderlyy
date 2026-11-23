@@ -1,14 +1,16 @@
-import { useRef, useState, type ComponentRef } from 'react';
-import { TextInput } from 'react-native';
-import { AppButton, AppInput } from '@/components';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AppButton } from '@/components';
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthSwitchLink } from '../components/AuthSwitchLink';
 import { DemoAccountNote } from '../components/DemoAccountNote';
+import { FormInput } from '../components/FormInput';
 import { DEMO_ACCOUNT } from '../demoAccount';
-import type { LoginValues } from '../types';
+import { loginSchema, type LoginValues } from '../validation';
 
 export interface LoginScreenProps {
+  /** Only called with values that passed validation (already trimmed). */
   onSubmit: (values: LoginValues) => void;
   onGoToRegister: () => void;
   submitting?: boolean;
@@ -19,16 +21,15 @@ export function LoginScreen({
   onGoToRegister,
   submitting = false,
 }: LoginScreenProps) {
-  const [values, setValues] = useState<LoginValues>({
-    username: '',
-    password: '',
+  const { control, handleSubmit, reset, setFocus } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { username: '', password: '' },
+    // Errors appear once a field is left, then update while typing.
+    mode: 'onTouched',
   });
-  const passwordRef = useRef<ComponentRef<typeof TextInput>>(null);
 
-  const set = (field: keyof LoginValues) => (text: string) =>
-    setValues(v => ({ ...v, [field]: text }));
-
-  const submit = () => onSubmit(values);
+  // Called without the native event: handleSubmit expects a web-style event.
+  const submit = () => handleSubmit(onSubmit)();
 
   return (
     <AuthLayout>
@@ -43,30 +44,29 @@ export function LoginScreen({
         subtitle="Sign in to keep exploring the world."
       />
 
-      <DemoAccountNote onUse={() => setValues({ ...DEMO_ACCOUNT })} />
+      <DemoAccountNote onUse={() => reset({ ...DEMO_ACCOUNT })} />
 
-      <AppInput
+      <FormInput
+        control={control}
+        name="username"
         label="Username"
         icon="user"
         placeholder="Your username"
-        value={values.username}
-        onChangeText={set('username')}
         autoCapitalize="none"
         autoCorrect={false}
         autoComplete="username"
         textContentType="username"
         returnKeyType="next"
         submitBehavior="submit"
-        onSubmitEditing={() => passwordRef.current?.focus()}
+        onSubmitEditing={() => setFocus('password')}
       />
-      <AppInput
-        ref={passwordRef}
+      <FormInput
+        control={control}
+        name="password"
         label="Password"
         icon="lock"
         secure
         placeholder="Your password"
-        value={values.password}
-        onChangeText={set('password')}
         autoCapitalize="none"
         autoComplete="password"
         textContentType="password"

@@ -1,20 +1,20 @@
-import { useRef, useState, type ComponentRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
-import { AppButton, AppInput } from '@/components';
+import { StyleSheet, View } from 'react-native';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AppButton } from '@/components';
 import { useTheme } from '@/theme';
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthSwitchLink } from '../components/AuthSwitchLink';
-import type { RegisterValues } from '../types';
+import { FormInput } from '../components/FormInput';
+import { registerSchema, type RegisterValues } from '../validation';
 
 export interface RegisterScreenProps {
+  /** Only called with values that passed validation (already trimmed). */
   onSubmit: (values: RegisterValues) => void;
   onGoToLogin: () => void;
   submitting?: boolean;
 }
-
-type Field = keyof RegisterValues;
-type InputRef = ComponentRef<typeof TextInput>;
 
 const EMPTY: RegisterValues = {
   firstName: '',
@@ -31,25 +31,19 @@ export function RegisterScreen({
   submitting = false,
 }: RegisterScreenProps) {
   const { spacing } = useTheme();
-  const [values, setValues] = useState<RegisterValues>(EMPTY);
+  const { control, handleSubmit, setFocus, trigger, formState } =
+    useForm<RegisterValues>({
+      resolver: zodResolver(registerSchema),
+      defaultValues: EMPTY,
+      mode: 'onTouched',
+    });
 
-  // One ref per field so "next" on the keyboard moves down the form.
-  const refs = {
-    lastName: useRef<InputRef>(null),
-    email: useRef<InputRef>(null),
-    username: useRef<InputRef>(null),
-    password: useRef<InputRef>(null),
-    confirmPassword: useRef<InputRef>(null),
-  };
-  const focus = (field: keyof typeof refs) => () =>
-    refs[field].current?.focus();
-
-  const set = (field: Field) => (text: string) =>
-    setValues(v => ({ ...v, [field]: text }));
-
-  const submit = () => onSubmit(values);
+  // Called without the native event: handleSubmit expects a web-style event.
+  const submit = () => handleSubmit(onSubmit)();
+  const next = (field: keyof RegisterValues) => () => setFocus(field);
 
   const common = {
+    control,
     autoCorrect: false,
     returnKeyType: 'next' as const,
     submitBehavior: 'submit' as const,
@@ -69,76 +63,72 @@ export function RegisterScreen({
       />
 
       <View style={[styles.row, { gap: spacing.sm }]}>
-        <AppInput
+        <FormInput
           {...common}
+          name="firstName"
           containerStyle={styles.half}
           label="First name"
           placeholder="Emily"
-          value={values.firstName}
-          onChangeText={set('firstName')}
           autoCapitalize="words"
           autoComplete="given-name"
-          onSubmitEditing={focus('lastName')}
+          onSubmitEditing={next('lastName')}
         />
-        <AppInput
+        <FormInput
           {...common}
-          ref={refs.lastName}
+          name="lastName"
           containerStyle={styles.half}
           label="Last name"
           placeholder="Johnson"
-          value={values.lastName}
-          onChangeText={set('lastName')}
           autoCapitalize="words"
           autoComplete="family-name"
-          onSubmitEditing={focus('email')}
+          onSubmitEditing={next('email')}
         />
       </View>
-      <AppInput
+      <FormInput
         {...common}
-        ref={refs.email}
+        name="email"
         label="Email"
         icon="mail"
         placeholder="you@example.com"
-        value={values.email}
-        onChangeText={set('email')}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
-        onSubmitEditing={focus('username')}
+        onSubmitEditing={next('username')}
       />
-      <AppInput
+      <FormInput
         {...common}
-        ref={refs.username}
+        name="username"
         label="Username"
         icon="user"
         placeholder="Pick a username"
-        value={values.username}
-        onChangeText={set('username')}
         autoCapitalize="none"
         autoComplete="username-new"
-        onSubmitEditing={focus('password')}
+        onSubmitEditing={next('password')}
       />
-      <AppInput
+      <FormInput
         {...common}
-        ref={refs.password}
+        name="password"
         label="Password"
         icon="lock"
         secure
-        placeholder="At least 6 characters"
-        value={values.password}
-        onChangeText={set('password')}
+        placeholder="6+ characters, a letter and a number"
         autoCapitalize="none"
         autoComplete="password-new"
-        onSubmitEditing={focus('confirmPassword')}
+        onSubmitEditing={next('confirmPassword')}
+        onValueChange={() => {
+          // Keep "Passwords do not match" in sync when the first password changes.
+          if (formState.touchedFields.confirmPassword) {
+            trigger('confirmPassword');
+          }
+        }}
       />
-      <AppInput
-        ref={refs.confirmPassword}
+      <FormInput
+        control={control}
+        name="confirmPassword"
         label="Confirm password"
         icon="lock"
         secure
         placeholder="Type it again"
-        value={values.confirmPassword}
-        onChangeText={set('confirmPassword')}
         autoCapitalize="none"
         returnKeyType="go"
         onSubmitEditing={submit}
