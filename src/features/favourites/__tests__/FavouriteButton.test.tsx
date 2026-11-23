@@ -86,14 +86,14 @@ describe('favourites in the app', () => {
   };
 
   it('saving from a card updates the Favourites tab badge', async () => {
-    jest
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(
+    jest.spyOn(globalThis, 'fetch').mockImplementation(
+      // A new Response per request: a body can only be read once.
+      async () =>
         new Response(
           JSON.stringify({ data: { objects: RAW, meta: { more: false } } }),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
         ),
-      );
+    );
     const store = makeStore({ auth: SIGNED_IN });
     await render(
       <Provider store={store}>
