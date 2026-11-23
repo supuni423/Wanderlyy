@@ -10,3 +10,15 @@ export {
   type CachedEntry,
   type CountriesCacheState,
 } from './countriesCacheSlice';
+export {
+  connectionChanged,
+  networkReducer,
+  selectIsOffline,
+  selectNetworkStatus,
+  toNetworkStatus,
+  type ConnectionInfo,
+  type NetworkState,
+  type NetworkStatus,
+} from './networkSlice';
+export { startNetworkMonitor } from './networkMonitor';
+export { useNetworkStatus, type NetworkStatusInfo } from './useNetworkStatus';

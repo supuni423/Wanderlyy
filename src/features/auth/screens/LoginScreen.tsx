@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AppButton } from '@/components';
+import { AppButton, OfflineBanner } from '@/components';
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthSwitchLink } from '../components/AuthSwitchLink';
@@ -17,6 +17,8 @@ export interface LoginScreenProps {
   submitting?: boolean;
   /** Server or network error from the last attempt. */
   errorMessage?: string;
+  /** Shows a banner: signing in / registering needs the internet. */
+  offline?: boolean;
 }
 
 export function LoginScreen({
@@ -24,6 +26,7 @@ export function LoginScreen({
   onGoToRegister,
   submitting = false,
   errorMessage,
+  offline = false,
 }: LoginScreenProps) {
   const { control, handleSubmit, reset, setFocus } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -78,6 +81,11 @@ export function LoginScreen({
         onSubmitEditing={submit}
       />
 
+      <OfflineBanner
+        visible={offline}
+        message="You're offline."
+        detail="Connect to the internet to continue."
+      />
       <FormError message={errorMessage} />
       <AppButton
         title="Sign in"

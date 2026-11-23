@@ -7,7 +7,8 @@ import {
   type ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { EmptyState } from '@/components';
+import { EmptyState, OfflineBanner } from '@/components';
+import { useNetworkStatus } from '@/features/offline';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import {
   COUNTRY_CARD_HEIGHT,
@@ -34,6 +35,7 @@ export function FavouritesScreen({
   const { colors, typography, spacing } = useTheme();
   const dispatch = useAppDispatch();
   const favourites = useAppSelector(selectFavourites);
+  const { isOffline } = useNetworkStatus();
   const [removed, setRemoved] = useState<FavouriteCountry | null>(null);
 
   const regions = [...new Set(favourites.map(f => f.region))].sort();
@@ -79,6 +81,10 @@ export function FavouritesScreen({
       style={[styles.screen, { backgroundColor: colors.background }]}
       edges={['top']}
     >
+      <OfflineBanner
+        visible={isOffline}
+        message="You're offline. Your wishlist still works."
+      />
       <View style={{ padding: spacing.lg, paddingBottom: spacing.md }}>
         <Text
           style={[typography.display, { color: colors.text }]}

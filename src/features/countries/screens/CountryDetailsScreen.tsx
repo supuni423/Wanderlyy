@@ -6,12 +6,13 @@ import {
   type RouteProp,
 } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ErrorState, LoadingIndicator } from '@/components';
+import { ErrorState, LoadingIndicator, OfflineBanner } from '@/components';
 import { FavouriteButton } from '@/features/favourites/components/FavouriteButton';
 import type { CountryDetailsParams } from '@/navigation/types';
 import {
   selectCachedCountryDetails,
   selectCachedCountryList,
+  useNetworkStatus,
 } from '@/features/offline';
 import { useAppSelector } from '@/app/hooks';
 import { useTheme } from '@/theme';
@@ -50,6 +51,7 @@ export function CountryDetailsScreen() {
   const navigation = useNavigation<DetailsNavigation>();
   const { colors, typography, spacing } = useTheme();
   const code = params.code;
+  const { isOffline } = useNetworkStatus();
 
   const {
     data: live,
@@ -121,6 +123,12 @@ export function CountryDetailsScreen() {
       ]}
       testID="country-details"
     >
+      <OfflineBanner
+        visible={isOffline}
+        message={
+          data ? "You're offline. Showing the saved copy." : "You're offline."
+        }
+      />
       <FlagHero country={summary} description={data?.flagDescription} />
 
       <View style={styles.titleBlock}>

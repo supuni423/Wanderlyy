@@ -1,5 +1,6 @@
 import { Alert } from 'react-native';
 import type { AuthStackScreenProps } from '@/navigation/types';
+import { useNetworkStatus } from '@/features/offline';
 import { getApiErrorMessage } from '@/services/api/errors';
 import { useLoginMutation, useRegisterMutation } from './authApi';
 import { LoginScreen } from './screens/LoginScreen';
@@ -14,6 +15,7 @@ import type { LoginValues, RegisterValues } from './validation';
 
 export function LoginRoute({ navigation }: AuthStackScreenProps<'Login'>) {
   const [login, { isLoading, error }] = useLoginMutation();
+  const { isOffline } = useNetworkStatus();
 
   const handleLogin = (values: LoginValues) => {
     // The error (if any) is shown from the mutation state.
@@ -24,6 +26,7 @@ export function LoginRoute({ navigation }: AuthStackScreenProps<'Login'>) {
     <LoginScreen
       onSubmit={handleLogin}
       onGoToRegister={() => navigation.navigate('Register')}
+      offline={isOffline}
       submitting={isLoading}
       errorMessage={getApiErrorMessage(error, {
         badRequest: 'Wrong username or password.',
@@ -36,6 +39,7 @@ export function RegisterRoute({
   navigation,
 }: AuthStackScreenProps<'Register'>) {
   const [register, { isLoading, error }] = useRegisterMutation();
+  const { isOffline } = useNetworkStatus();
 
   const handleRegister = async (values: RegisterValues) => {
     try {
@@ -55,6 +59,7 @@ export function RegisterRoute({
     <RegisterScreen
       onSubmit={handleRegister}
       onGoToLogin={() => navigation.popTo('Login')}
+      offline={isOffline}
       submitting={isLoading}
       errorMessage={getApiErrorMessage(error, {
         fallback: 'Could not create your account. Please try again.',

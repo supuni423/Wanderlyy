@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AppButton } from '@/components';
+import { AppButton, OfflineBanner } from '@/components';
 import { useTheme } from '@/theme';
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthLayout } from '../components/AuthLayout';
@@ -17,6 +17,8 @@ export interface RegisterScreenProps {
   submitting?: boolean;
   /** Server or network error from the last attempt. */
   errorMessage?: string;
+  /** Shows a banner: signing in / registering needs the internet. */
+  offline?: boolean;
 }
 
 const EMPTY: RegisterValues = {
@@ -33,6 +35,7 @@ export function RegisterScreen({
   onGoToLogin,
   submitting = false,
   errorMessage,
+  offline = false,
 }: RegisterScreenProps) {
   const { spacing } = useTheme();
   const { control, handleSubmit, setFocus, trigger, formState } =
@@ -138,6 +141,11 @@ export function RegisterScreen({
         onSubmitEditing={submit}
       />
 
+      <OfflineBanner
+        visible={offline}
+        message="You're offline."
+        detail="Connect to the internet to continue."
+      />
       <FormError message={errorMessage} />
       <AppButton
         title="Create account"

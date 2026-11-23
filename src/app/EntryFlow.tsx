@@ -7,6 +7,7 @@ import {
   hasSeenOnboarding,
   markOnboardingSeen,
 } from '@/features/onboarding';
+import { startNetworkMonitor } from '@/features/offline';
 import { RootNavigator } from '@/navigation';
 import { useTheme } from '@/theme';
 import { useAppDispatch, useAppSelector } from './hooks';
@@ -26,6 +27,9 @@ export function EntryFlow() {
   const authStatus = useAppSelector(selectAuthStatus);
   const [seenIntro, setSeenIntro] = useState<boolean | null>(null);
   const [splashTimeUp, setSplashTimeUp] = useState(false);
+
+  // Follow the connection for the whole life of the app.
+  useEffect(() => startNetworkMonitor(dispatch), [dispatch]);
 
   useEffect(() => {
     let cancelled = false;

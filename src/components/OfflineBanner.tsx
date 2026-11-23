@@ -5,16 +5,21 @@ import { useTheme } from '@/theme';
 export interface OfflineBannerProps {
   /** Show the banner only while the device is offline. */
   visible: boolean;
+  /** Main line; defaults to the saved-countries message. */
+  message?: string;
   /** Extra detail, e.g. when the saved data was last updated. */
   detail?: string;
 }
 
 /**
  * Strip shown at the top of a screen when there is no connection.
- * The network status is wired in later (offline feature); this
- * component only handles how it looks.
+ * Screens decide when to show it (useNetworkStatus) and what to say.
  */
-export function OfflineBanner({ visible, detail }: OfflineBannerProps) {
+export function OfflineBanner({
+  visible,
+  message = "You're offline. Showing saved countries.",
+  detail,
+}: OfflineBannerProps) {
   const { colors, typography, spacing, radius } = useTheme();
   if (!visible) {
     return null;
@@ -39,7 +44,7 @@ export function OfflineBanner({ visible, detail }: OfflineBannerProps) {
       <Feather name="wifi-off" size={18} color={colors.warning} />
       <View style={styles.text}>
         <Text style={[typography.label, { color: colors.warning }]}>
-          You're offline. Showing saved countries.
+          {message}
         </Text>
         {!!detail && (
           <Text style={[typography.caption, { color: colors.warning }]}>

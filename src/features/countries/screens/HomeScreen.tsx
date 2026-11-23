@@ -12,12 +12,13 @@ import {
   EmptyState,
   ErrorState,
   LoadingIndicator,
+  OfflineBanner,
   SearchBar,
 } from '@/components';
 import { useDebouncedValue } from '@/hooks';
 import { useAppSelector } from '@/app/hooks';
 import { selectCurrentUser } from '@/features/auth';
-import { selectCachedCountryList } from '@/features/offline';
+import { selectCachedCountryList, useNetworkStatus } from '@/features/offline';
 import { formatTimeAgo } from '@/utils/format';
 import type { HomeStackScreenProps } from '@/navigation/types';
 import { useTheme } from '@/theme';
@@ -38,6 +39,7 @@ import type { CountrySummary } from '../types';
 export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
   const { colors, typography, spacing } = useTheme();
   const user = useAppSelector(selectCurrentUser);
+  const { isOffline } = useNetworkStatus();
   const {
     data: live,
     error,
@@ -202,6 +204,17 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
       style={[styles.screen, { backgroundColor: colors.background }]}
       edges={['top']}
     >
+      <OfflineBanner
+        visible={isOffline}
+        message={
+          data ? "You're offline. Showing saved countries." : "You're offline."
+        }
+        detail={
+          cached
+            ? `Country list saved ${formatTimeAgo(cached.savedAt)}`
+            : 'Connect once to save the country list for offline use.'
+        }
+      />
       {header}
       {filters}
       {content}
