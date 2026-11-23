@@ -1,23 +1,38 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import {
+  FLUSH,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+  REHYDRATE,
+  persistReducer,
+  persistStore,
+} from 'redux-persist';
 import { authApi } from '@/features/auth/authApi';
 import { authReducer } from '@/features/auth/authSlice';
 import { countriesApi } from '@/features/countries/countriesApi';
 import { favouritesReducer } from '@/features/favourites/favouritesSlice';
+import { authPersistConfig, rootPersistConfig } from './persistence';
 
 /**
- * Redux store. Each feature adds its slice / API here as it is built
- * (countries, favourites, offline cache, theme).
+ * Redux store. Each feature adds its slice / API here as it is built.
+ *
+ * Two flavours share the same reducers:
+ * - makeStore(): plain, in-memory store (used by tests)
+ * - makePersistedStore(): the app's store, saved to AsyncStorage
  */
-const rootReducer = combineReducers({
-  auth: authReducer,
+const reducers = {
   favourites: favouritesReducer,
   [authApi.reducerPath]: authApi.reducer,
   [countriesApi.reducerPath]: countriesApi.reducer,
-});
+};
+
+const rootReducer = combineReducers({ auth: authReducer, ...reducers });
 
 export type RootState = ReturnType<typeof rootReducer>;
 
-/** Factory so tests can create a fresh store (optionally pre-filled). */
+/** In-memory store, optionally pre-filled (tests use this). */
 export function makeStore(preloadedState?: Partial<RootState>) {
   return configureStore({
     reducer: rootReducer,
@@ -27,7 +42,28 @@ export function makeStore(preloadedState?: Partial<RootState>) {
   });
 }
 
-export const store = makeStore();
+/** The app's store: favourites and the user profile survive restarts. */
+export function makePersistedStore() {
+  const persistedReducer = persistReducer(
+    rootPersistConfig,
+    combineReducers({
+      auth: persistReducer(authPersistConfig, authReducer),
+      ...reducers,
+    }),
+  );
+  const store = configureStore({
+    reducer: persistedReducer,
+    middleware: getDefault =>
+      getDefault({
+        // redux-persist's own actions carry functions; that is expected.
+        serializableCheck: {
+          ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        },
+      }).concat(authApi.middleware, countriesApi.middleware),
+  });
+  const persistor = persistStore(store);
+  return { store, persistor };
+}
 
 export type AppStore = ReturnType<typeof makeStore>;
 export type AppDispatch = AppStore['dispatch'];
