@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@react-native-vector-icons/feather/static';
 import { useTheme } from '@/theme';
+import { FavouriteButton } from '@/features/favourites/components/FavouriteButton';
 import { formatCompact } from '@/utils/format';
 import { regionTone } from '../regionTone';
 import type { CountrySummary } from '../types';
@@ -98,7 +99,7 @@ function CountryCardBase({ country, onPress, index = 0 }: CountryCardProps) {
         </View>
       </View>
 
-      <Feather name="chevron-right" size={22} color={colors.textMuted} />
+      <FavouriteButton country={country} />
     </Pressable>
   );
 }
@@ -112,8 +113,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    paddingHorizontal: 14,
+    gap: 12,
+    paddingLeft: 14,
+    paddingRight: 4,
     borderWidth: 1,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,

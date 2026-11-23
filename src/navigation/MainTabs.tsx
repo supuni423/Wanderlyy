@@ -5,7 +5,8 @@ import {
   type FeatherIconName,
 } from '@react-native-vector-icons/feather/static';
 import { CountryDetailsScreen, HomeScreen } from '@/features/countries';
-import { FavouritesScreen } from '@/features/favourites';
+import { FavouritesScreen, selectFavouriteCount } from '@/features/favourites';
+import { useAppSelector } from '@/app/hooks';
 import { ProfileScreen } from '@/features/settings';
 import { useTheme } from '@/theme';
 import { stackScreenOptions } from './navigationTheme';
@@ -73,6 +74,7 @@ const TAB_ICONS = {
 /** Signed-in area: Home, Favourites and Profile tabs. */
 export function MainTabs() {
   const { colors, touchTarget } = useTheme();
+  const favouriteCount = useAppSelector(selectFavouriteCount);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -96,7 +98,18 @@ export function MainTabs() {
       <Tab.Screen
         name="FavouritesTab"
         component={FavouritesStackNavigator}
-        options={{ title: 'Favourites' }}
+        options={{
+          title: 'Favourites',
+          tabBarBadge: favouriteCount > 0 ? favouriteCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.primary,
+            color: colors.onPrimary,
+          },
+          tabBarAccessibilityLabel:
+            favouriteCount > 0
+              ? `Favourites, ${favouriteCount} saved`
+              : 'Favourites',
+        }}
       />
       <Tab.Screen
         name="ProfileTab"

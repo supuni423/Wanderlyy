@@ -7,6 +7,7 @@ import {
 } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ErrorState, LoadingIndicator } from '@/components';
+import { FavouriteButton } from '@/features/favourites/components/FavouriteButton';
 import type { CountryDetailsParams } from '@/navigation/types';
 import { useTheme } from '@/theme';
 import {
@@ -52,8 +53,14 @@ export function CountryDetailsScreen() {
   const summary = data ?? list?.find(c => c.code === code);
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: summary?.name ?? 'Country' });
-  }, [navigation, summary?.name]);
+    navigation.setOptions({
+      title: summary?.name ?? 'Country',
+      // Heart in the header once we know which country this is.
+      headerRight: summary
+        ? () => <FavouriteButton country={summary} variant="header" />
+        : undefined,
+    });
+  }, [navigation, summary]);
 
   const retry = useCallback(() => {
     refetch();

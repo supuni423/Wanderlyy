@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { authApi } from '@/features/auth/authApi';
 import { authReducer } from '@/features/auth/authSlice';
 import { countriesApi } from '@/features/countries/countriesApi';
+import { favouritesReducer } from '@/features/favourites/favouritesSlice';
 
 /**
  * Redux store. Each feature adds its slice / API here as it is built
@@ -9,6 +10,7 @@ import { countriesApi } from '@/features/countries/countriesApi';
  */
 const rootReducer = combineReducers({
   auth: authReducer,
+  favourites: favouritesReducer,
   [authApi.reducerPath]: authApi.reducer,
   [countriesApi.reducerPath]: countriesApi.reducer,
 });

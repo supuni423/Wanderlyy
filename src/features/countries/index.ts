@@ -8,5 +8,10 @@ export {
   useGetCountryByCodeQuery,
 } from './countriesApi';
 export { getCountriesErrorMessage } from './countriesErrors';
-export type { CountryDetails, CountrySummary, Currency } from './types';
+export type {
+  CountryDetails,
+  CountrySummary,
+  Currency,
+  RawCountry,
+} from './types';
 export { CountryDetailsScreen } from './screens/CountryDetailsScreen';

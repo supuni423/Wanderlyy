@@ -74,10 +74,13 @@ afterEach(() => jest.restoreAllMocks());
 
 describe('CountryCard', () => {
   async function renderCard(country: CountrySummary, onPress = jest.fn()) {
+    // The card contains a favourite heart, which reads from the store.
     await render(
-      <ThemeProvider>
-        <CountryCard country={country} onPress={onPress} />
-      </ThemeProvider>,
+      <Provider store={makeStore()}>
+        <ThemeProvider>
+          <CountryCard country={country} onPress={onPress} />
+        </ThemeProvider>
+      </Provider>,
     );
     return onPress;
   }
@@ -97,9 +100,16 @@ describe('CountryCard', () => {
     ).toBeTruthy();
   });
 
+  it('has a heart to save the country', async () => {
+    await renderCard(JAPAN);
+    expect(
+      screen.getByRole('button', { name: 'Save Japan to favourites' }),
+    ).toBeTruthy();
+  });
+
   it('passes only the country code when tapped', async () => {
     const onPress = await renderCard(JAPAN);
-    await fireEvent.press(screen.getByRole('button'));
+    await fireEvent.press(screen.getByRole('button', { name: /^Japan,/ }));
     expect(onPress).toHaveBeenCalledWith('JPN');
   });
 
