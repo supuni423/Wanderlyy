@@ -166,8 +166,16 @@ describe('HomeScreen', () => {
     jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(listResponse(RAW));
     await renderHome();
 
+    const spy = jest.spyOn(globalThis, 'fetch');
     await fireEvent.press(await screen.findByText('Japan'));
-    expect(await screen.findByText('JPN')).toBeTruthy();
+
+    // Details opens for Japan and asks the API for that code only.
+    expect(await screen.findByLabelText('Capital: Tokyo')).toBeTruthy();
+    expect(
+      spy.mock.calls.some(([req]) =>
+        (req as Request).url.includes('/codes.alpha_3/JPN'),
+      ),
+    ).toBe(true);
   });
 
   describe('search and region filter', () => {

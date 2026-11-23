@@ -57,27 +57,16 @@
             "symbol": "¥"
           }
         ],
-        "timezones": [
-          "UTC+09:00"
-        ],
+        "timezones": ["UTC+09:00"],
         "borders": [],
-        "continents": [
-          "Asia"
-        ],
+        "continents": ["Asia"],
         "landlocked": false,
         "cars": {
           "driving_side": "left",
-          "signs": [
-            "J"
-          ]
+          "signs": ["J"]
         },
-        "calling_codes": [
-          "81"
-        ],
-        "tlds": [
-          ".jp",
-          ".みんな"
-        ],
+        "calling_codes": ["81"],
+        "tlds": [".jp", ".みんな"],
         "demonyms": {
           "eng": {
             "f": "Japanese",
