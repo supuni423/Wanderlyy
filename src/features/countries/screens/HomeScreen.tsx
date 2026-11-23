@@ -18,7 +18,11 @@ import {
 import { useDebouncedValue } from '@/hooks';
 import { useAppSelector } from '@/app/hooks';
 import { selectCurrentUser } from '@/features/auth';
-import { selectCachedCountryList, useNetworkStatus } from '@/features/offline';
+import {
+  selectCachedCountryList,
+  selectSavedPageCodes,
+  useNetworkStatus,
+} from '@/features/offline';
 import { formatTimeAgo } from '@/utils/format';
 import type { HomeStackScreenProps } from '@/navigation/types';
 import { useTheme } from '@/theme';
@@ -40,32 +44,45 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
   const { colors, typography, spacing } = useTheme();
   const user = useAppSelector(selectCurrentUser);
   const { isOffline } = useNetworkStatus();
+  // Offline-first: fall back to the saved copy when there is no live data.
+  const cached = useAppSelector(selectCachedCountryList);
+  const savedPages = useAppSelector(selectSavedPageCodes);
   const {
     data: live,
     error,
     isLoading,
     isFetching,
     refetch,
-  } = useGetCountriesQuery();
-  // Offline-first: fall back to the saved copy when there is no live data.
-  const cached = useAppSelector(selectCachedCountryList);
+  } = useGetCountriesQuery(undefined, {
+    // No point asking while offline if we have a saved list; the request
+    // runs by itself as soon as the connection is back.
+    skip: isOffline && !!cached,
+  });
   const data = live ?? cached?.data;
   const showingSavedCopy = !live && !!cached;
 
   const [query, setQuery] = useState('');
   const [region, setRegion] = useState<RegionFilter>('All');
+  const [savedOnly, setSavedOnly] = useState(false);
   // Filter once typing pauses, not on every keystroke.
   const debouncedQuery = useDebouncedValue(query, 250);
 
   const countries = useMemo(
-    () => filterCountries(data ?? [], { query: debouncedQuery, region }),
-    [data, debouncedQuery, region],
+    () =>
+      filterCountries(data ?? [], {
+        query: debouncedQuery,
+        region,
+        onlyCodes: savedOnly ? savedPages : null,
+      }),
+    [data, debouncedQuery, region, savedOnly, savedPages],
   );
-  const isFiltered = debouncedQuery.trim() !== '' || region !== 'All';
+  const isFiltered =
+    debouncedQuery.trim() !== '' || region !== 'All' || savedOnly;
 
   const clearFilters = useCallback(() => {
     setQuery('');
     setRegion('All');
+    setSavedOnly(false);
   }, []);
 
   // Used by both "Try again" and pull-to-refresh.
@@ -80,9 +97,14 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
 
   const renderItem: ListRenderItem<CountrySummary> = useCallback(
     ({ item, index }) => (
-      <CountryCard country={item} index={index} onPress={openCountry} />
+      <CountryCard
+        country={item}
+        index={index}
+        onPress={openCountry}
+        savedOffline={savedPages.has(item.code)}
+      />
     ),
-    [openCountry],
+    [openCountry, savedPages],
   );
 
   const header = (
@@ -129,13 +151,30 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
           accessibilityLabel="Search countries"
         />
       </View>
-      <RegionChips selected={region} onSelect={setRegion} />
+      <RegionChips
+        selected={region}
+        onSelect={setRegion}
+        savedCount={savedPages.size}
+        savedOnly={savedOnly}
+        onToggleSavedOnly={() => setSavedOnly(on => !on)}
+      />
     </View>
   );
 
   let content;
   if (isLoading && !data) {
     content = <LoadingIndicator message="Finding countries…" />;
+  } else if (isOffline && !data) {
+    // Offline before the list was ever saved: say exactly what to do.
+    content = (
+      <ErrorState
+        icon="wifi-off"
+        title="You're offline"
+        message="Connect to the internet once to download the country list. After that, Wanderlyy works offline too."
+        onRetry={retry}
+        retrying={isFetching}
+      />
+    );
   } else if (error && !data) {
     content = (
       <ErrorState
@@ -173,6 +212,8 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
                   ? `Nothing matches "${debouncedQuery.trim()}"${
                       region === 'All' ? '' : ` in ${region}`
                     }.`
+                  : savedOnly
+                  ? 'No saved countries match these filters.'
                   : `No countries in ${region}.`
               }
               actionLabel="Clear filters"

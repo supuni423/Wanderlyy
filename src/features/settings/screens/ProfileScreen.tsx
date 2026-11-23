@@ -5,6 +5,12 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { logout, selectCurrentUser } from '@/features/auth';
 import { FactRow, Section, StatTile } from '@/features/countries';
 import { clearFavourites, selectFavourites } from '@/features/favourites';
+import {
+  clearCountriesCache,
+  MAX_CACHED_DETAILS,
+  selectOfflineStorageSummary,
+} from '@/features/offline';
+import { formatTimeAgo } from '@/utils/format';
 import { resetOnboarding } from '@/features/onboarding';
 import { useTheme } from '@/theme';
 import { version as APP_VERSION } from '../../../../package.json';
@@ -19,6 +25,7 @@ export function ProfileScreen() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectCurrentUser);
   const favourites = useAppSelector(selectFavourites);
+  const offline = useAppSelector(selectOfflineStorageSummary);
 
   const regions = new Set(favourites.map(f => f.region)).size;
   const latest = favourites[0]?.name ?? '—';
@@ -33,6 +40,21 @@ export function ProfileScreen() {
           text: 'Clear all',
           style: 'destructive',
           onPress: () => dispatch(clearFavourites()),
+        },
+      ],
+    );
+  };
+
+  const confirmClearOfflineData = () => {
+    Alert.alert(
+      'Clear offline data?',
+      'Saved country data is removed from this phone. It downloads again next time you are online. Your favourites are kept.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => dispatch(clearCountriesCache()),
         },
       ],
     );
@@ -140,6 +162,34 @@ export function ProfileScreen() {
             label="Replay the intro"
             hint="Shows the welcome slides next time"
             onPress={replayIntro}
+            last
+          />
+        </Section>
+
+        <Section title="Offline storage">
+          <FactRow
+            icon="list"
+            label="Country list"
+            value={
+              offline.listSavedAt
+                ? `${offline.countries} countries · saved ${formatTimeAgo(
+                    offline.listSavedAt,
+                  )}`
+                : 'Not saved yet'
+            }
+          />
+          <FactRow
+            icon="download-cloud"
+            label="Country pages"
+            value={`${offline.pages} saved (keeps up to ${MAX_CACHED_DETAILS})`}
+          />
+          <SettingsRow
+            icon="trash"
+            label="Clear offline data"
+            hint="Favourites are kept"
+            onPress={confirmClearOfflineData}
+            destructive
+            disabled={offline.pages === 0 && !offline.listSavedAt}
             last
           />
         </Section>

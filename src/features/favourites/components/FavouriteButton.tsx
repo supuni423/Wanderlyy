@@ -3,6 +3,8 @@ import { Animated, Pressable, StyleSheet } from 'react-native';
 import { Feather } from '@react-native-vector-icons/feather/static';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import type { CountrySummary } from '@/features/countries';
+import { countriesApi } from '@/features/countries/countriesApi';
+import { selectIsOffline } from '@/features/offline/networkSlice';
 import { useTheme } from '@/theme';
 import { selectIsFavourite, toggleFavourite } from '../favouritesSlice';
 
@@ -27,10 +29,20 @@ export function FavouriteButton({
   const { colors, touchTarget } = useTheme();
   const dispatch = useAppDispatch();
   const saved = useAppSelector(state => selectIsFavourite(state, country.code));
+  const offline = useAppSelector(selectIsOffline);
   const scale = useRef(new Animated.Value(1)).current;
 
   const onPress = () => {
     dispatch(toggleFavourite(country));
+    if (!saved && !offline) {
+      // Saving a favourite also keeps its full page for offline use
+      // (one request; skipped if it is already in RTK Query's cache).
+      dispatch(
+        countriesApi.util.prefetch('getCountryByCode', country.code, {
+          ifOlderThan: 60 * 60,
+        }),
+      );
+    }
     onChange?.(!saved);
     scale.setValue(0.7);
     Animated.spring(scale, {

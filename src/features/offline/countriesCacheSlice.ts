@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSelector, createSlice } from '@reduxjs/toolkit';
 import { countriesApi } from '@/features/countries/countriesApi';
 import type {
   CountryDetails,
@@ -78,3 +78,19 @@ export const selectCachedCountryList = (state: WithCache) =>
 
 export const selectCachedCountryDetails = (state: WithCache, code: string) =>
   state.countriesCache.details[code.toUpperCase()] ?? null;
+
+/** Codes of every country whose full page is saved for offline use. */
+export const selectSavedPageCodes = createSelector(
+  [(state: WithCache) => state.countriesCache.details],
+  details => new Set(Object.keys(details)),
+);
+
+/** Summary for the Profile "Offline storage" section. */
+export const selectOfflineStorageSummary = createSelector(
+  [(state: WithCache) => state.countriesCache],
+  cache => ({
+    countries: cache.list?.data.length ?? 0,
+    listSavedAt: cache.list?.savedAt ?? null,
+    pages: Object.keys(cache.details).length,
+  }),
+);

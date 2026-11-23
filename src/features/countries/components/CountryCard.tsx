@@ -15,6 +15,8 @@ interface CountryCardProps {
   onPress: (code: string) => void;
   /** Alternates the flag's tilt so the list feels hand-made. */
   index?: number;
+  /** Full page is saved on the phone, so it opens offline. */
+  savedOffline?: boolean;
   /** Told when the heart is tapped (e.g. so Favourites can offer Undo). */
   onFavouriteChange?: (country: CountrySummary, saved: boolean) => void;
 }
@@ -23,6 +25,7 @@ function CountryCardBase({
   country,
   onPress,
   index = 0,
+  savedOffline = false,
   onFavouriteChange,
 }: CountryCardProps) {
   const { colors, typography, radius, spacing } = useTheme();
@@ -36,6 +39,7 @@ function CountryCardBase({
     country.population > 0
       ? `population ${formatCompact(country.population)}`
       : null,
+    savedOffline ? 'saved for offline' : null,
   ]
     .filter(Boolean)
     .join(', ');
@@ -102,6 +106,14 @@ function CountryCardBase({
                 {formatCompact(country.population)}
               </Text>
             </View>
+          )}
+          {savedOffline && (
+            <Feather
+              name="download-cloud"
+              size={14}
+              color={colors.accentGreen}
+              testID={`saved-offline-${country.code}`}
+            />
           )}
         </View>
       </View>

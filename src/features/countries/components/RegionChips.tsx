@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@react-native-vector-icons/feather/static';
 import { useTheme } from '@/theme';
 import { REGION_FILTERS, type RegionFilter } from '../filterCountries';
 import { regionTone } from '../regionTone';
@@ -6,10 +7,20 @@ import { regionTone } from '../regionTone';
 interface RegionChipsProps {
   selected: RegionFilter;
   onSelect: (region: RegionFilter) => void;
+  /** How many full pages are saved; the toggle hides when 0. */
+  savedCount?: number;
+  savedOnly?: boolean;
+  onToggleSavedOnly?: () => void;
 }
 
 /** Horizontally scrolling region filter. One chip is always selected. */
-export function RegionChips({ selected, onSelect }: RegionChipsProps) {
+export function RegionChips({
+  selected,
+  onSelect,
+  savedCount = 0,
+  savedOnly = false,
+  onToggleSavedOnly,
+}: RegionChipsProps) {
   const { colors, typography, touchTarget, spacing } = useTheme();
 
   return (
@@ -54,6 +65,42 @@ export function RegionChips({ selected, onSelect }: RegionChipsProps) {
           </Pressable>
         );
       })}
+      {savedCount > 0 && onToggleSavedOnly && (
+        <Pressable
+          onPress={onToggleSavedOnly}
+          accessibilityRole="switch"
+          accessibilityLabel={`Only countries saved for offline, ${savedCount}`}
+          accessibilityState={{ checked: savedOnly }}
+          style={[styles.target, { minHeight: touchTarget }]}
+        >
+          <View
+            style={[
+              styles.pill,
+              styles.savedPill,
+              {
+                borderColor: colors.accentGreen,
+                backgroundColor: savedOnly
+                  ? colors.accentGreen
+                  : colors.surface,
+              },
+            ]}
+          >
+            <Feather
+              name="download-cloud"
+              size={14}
+              color={savedOnly ? colors.background : colors.accentGreen}
+            />
+            <Text
+              style={[
+                typography.label,
+                { color: savedOnly ? colors.background : colors.accentGreen },
+              ]}
+            >
+              Saved ({savedCount})
+            </Text>
+          </View>
+        </Pressable>
+      )}
     </ScrollView>
   );
 }
@@ -61,6 +108,7 @@ export function RegionChips({ selected, onSelect }: RegionChipsProps) {
 const styles = StyleSheet.create({
   row: { gap: 8 },
   target: { justifyContent: 'center' },
+  savedPill: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   pill: {
     borderWidth: 1.5,
     borderRadius: 999,

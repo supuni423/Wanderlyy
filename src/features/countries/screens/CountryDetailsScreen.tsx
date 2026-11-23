@@ -12,6 +12,7 @@ import type { CountryDetailsParams } from '@/navigation/types';
 import {
   selectCachedCountryDetails,
   selectCachedCountryList,
+  selectSavedPageCodes,
   useNetworkStatus,
 } from '@/features/offline';
 import { useAppSelector } from '@/app/hooks';
@@ -59,7 +60,10 @@ export function CountryDetailsScreen() {
     isLoading,
     isFetching,
     refetch,
-  } = useGetCountryByCodeQuery(code);
+  } = useGetCountryByCodeQuery(code, {
+    // Offline the request cannot succeed; it runs by itself once back online.
+    skip: isOffline,
+  });
 
   // Offline-first: use the saved copy of this page if there is no live one.
   const cachedDetails = useAppSelector(state =>
@@ -94,15 +98,37 @@ export function CountryDetailsScreen() {
     list?.find(c => c.code === borderCode)?.name ?? borderCode;
 
   const notFound = !!error && 'status' in error && error.status === 404;
-  const loadError = error && !data && (
-    <ErrorState
-      icon={notFound ? 'map' : 'cloud-off'}
-      title={notFound ? 'Country not found' : "Couldn't load this country"}
-      message={getCountriesErrorMessage(error)}
-      onRetry={notFound ? undefined : retry}
-      retrying={isFetching}
-    />
-  );
+  const savedPages = useAppSelector(selectSavedPageCodes);
+
+  // Why the facts can't be shown (if they can't), in plain words.
+  const renderUnavailable = () => {
+    if (data) {
+      return null;
+    }
+    if (isOffline) {
+      // Offline and this page was never saved: explain instead of failing.
+      return (
+        <ErrorState
+          icon="download-cloud"
+          title="Not saved for offline yet"
+          message="Open this country once while you're online and Wanderlyy keeps it on your phone. It will load by itself when you reconnect."
+        />
+      );
+    }
+    if (error) {
+      return (
+        <ErrorState
+          icon={notFound ? 'map' : 'cloud-off'}
+          title={notFound ? 'Country not found' : "Couldn't load this country"}
+          message={getCountriesErrorMessage(error)}
+          onRetry={notFound ? undefined : retry}
+          retrying={isFetching}
+        />
+      );
+    }
+    return null;
+  };
+  const loadError = renderUnavailable();
 
   // Nothing to show at all (not in the list either): full-screen error.
   if (loadError && !summary) {
@@ -200,6 +226,7 @@ export function CountryDetailsScreen() {
         <DetailsSections
           details={data}
           nameOf={nameOf}
+          savedPages={savedPages}
           onOpenNeighbour={borderCode =>
             navigation.push('CountryDetails', { code: borderCode })
           }
@@ -212,10 +239,12 @@ export function CountryDetailsScreen() {
 function DetailsSections({
   details,
   nameOf,
+  savedPages,
   onOpenNeighbour,
 }: {
   details: CountryDetails;
   nameOf: (code: string) => string;
+  savedPages: ReadonlySet<string>;
   onOpenNeighbour: (code: string) => void;
 }) {
   const { colors, typography, spacing } = useTheme();
@@ -306,6 +335,7 @@ function DetailsSections({
               <NeighbourChip
                 key={borderCode}
                 label={nameOf(borderCode)}
+                savedOffline={savedPages.has(borderCode)}
                 onPress={() => onOpenNeighbour(borderCode)}
               />
             ))}

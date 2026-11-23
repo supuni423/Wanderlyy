@@ -174,16 +174,21 @@ export function FactRow({
 export function NeighbourChip({
   label,
   onPress,
+  savedOffline = false,
 }: {
   label: string;
   onPress: () => void;
+  /** Its page is saved, so it opens offline. */
+  savedOffline?: boolean;
 }) {
   const { colors, typography, touchTarget } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Open ${label}`}
+      accessibilityLabel={`Open ${label}${
+        savedOffline ? ', saved for offline' : ''
+      }`}
       style={({ pressed }) => [
         styles.neighbour,
         {
@@ -194,7 +199,11 @@ export function NeighbourChip({
       ]}
     >
       <Text style={[typography.label, { color: colors.text }]}>{label}</Text>
-      <Feather name="arrow-up-right" size={14} color={colors.primary} />
+      <Feather
+        name={savedOffline ? 'download-cloud' : 'arrow-up-right'}
+        size={14}
+        color={savedOffline ? colors.accentGreen : colors.primary}
+      />
     </Pressable>
   );
 }

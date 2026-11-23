@@ -16,6 +16,8 @@ export type RegionFilter = (typeof REGION_FILTERS)[number];
 export interface CountryFilters {
   query: string;
   region: RegionFilter;
+  /** When given, only countries whose full page is saved offline. */
+  onlyCodes?: ReadonlySet<string> | null;
 }
 
 /**
@@ -39,10 +41,13 @@ export function normalise(text: string): string {
  */
 export function filterCountries(
   countries: CountrySummary[],
-  { query, region }: CountryFilters,
+  { query, region, onlyCodes }: CountryFilters,
 ): CountrySummary[] {
   const needle = normalise(query);
   return countries.filter(country => {
+    if (onlyCodes && !onlyCodes.has(country.code)) {
+      return false;
+    }
     if (region !== 'All' && country.region !== region) {
       return false;
     }
