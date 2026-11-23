@@ -26,6 +26,9 @@ export function getApiErrorMessage(
   if (!('status' in error)) {
     return fallback;
   }
+  if (error.status === 'CUSTOM_ERROR') {
+    return error.error;
+  }
   if (error.status === 'FETCH_ERROR' || error.status === 'TIMEOUT_ERROR') {
     return NETWORK_ERROR_MESSAGE;
   }

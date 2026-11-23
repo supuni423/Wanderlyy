@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { saveTokens } from './sessionStorage';
 import type { LoginValues, RegisterValues } from './validation';
 import {
   toUser,
@@ -23,14 +24,29 @@ export const authApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: DUMMYJSON_URL, timeout: 15000 }),
   endpoints: build => ({
     login: build.mutation<User, LoginValues>({
-      query: ({ username, password }) => ({
-        url: '/auth/login',
-        method: 'POST',
-        body: { username, password, expiresInMins: TOKEN_LIFETIME_MINUTES },
-      }),
-      // Only the profile is returned to the app, so tokens never end up in
-      // Redux state. Storing them securely is added with the session work.
-      transformResponse: (response: LoginResponse) => toUser(response),
+      async queryFn({ username, password }, _api, _extra, baseQuery) {
+        const result = await baseQuery({
+          url: '/auth/login',
+          method: 'POST',
+          body: { username, password, expiresInMins: TOKEN_LIFETIME_MINUTES },
+        });
+        if (result.error) {
+          return { error: result.error };
+        }
+        const response = result.data as LoginResponse;
+
+        // Tokens go to the Keychain only. Redux receives just the profile.
+        const saved = await saveTokens(response);
+        if (!saved) {
+          return {
+            error: {
+              status: 'CUSTOM_ERROR',
+              error: 'Could not save your session securely. Please try again.',
+            },
+          };
+        }
+        return { data: toUser(response) };
+      },
     }),
     register: build.mutation<RegisteredUser, RegisterValues>({
       query: ({ firstName, lastName, email, username, password }) => ({

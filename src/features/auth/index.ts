@@ -10,6 +10,8 @@ export { AuthFlow } from './AuthFlow';
 export { authApi, useLoginMutation, useRegisterMutation } from './authApi';
 export {
   authReducer,
+  logout,
+  restoreSession,
   selectAuthStatus,
   selectCurrentUser,
   signedOut,
@@ -17,5 +19,6 @@ export {
   type AuthStatus,
 } from './authSlice';
 export { toUser, type User } from './authTypes';
+export { clearTokens, loadTokens, saveTokens } from './sessionStorage';
 export { DEMO_ACCOUNT } from './demoAccount';
 export type { LoginValues, RegisterValues } from './types';

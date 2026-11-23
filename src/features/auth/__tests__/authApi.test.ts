@@ -1,6 +1,7 @@
 import { makeStore } from '@/app/store';
 import { authApi } from '../authApi';
-import { signedOut } from '../authSlice';
+import { logout } from '../authSlice';
+import { clearTokens, loadTokens } from '../sessionStorage';
 import { toUser, type LoginResponse } from '../authTypes';
 
 const LOGIN_RESPONSE: LoginResponse = {
@@ -24,6 +25,7 @@ function mockFetchOnce(status: number, body: unknown) {
   );
 }
 
+beforeEach(() => clearTokens());
 afterEach(() => jest.restoreAllMocks());
 
 describe('toUser', () => {
@@ -86,7 +88,9 @@ describe('login', () => {
 
   it('stays signed out when the credentials are wrong', async () => {
     mockFetchOnce(400, { message: 'Invalid credentials' });
-    const store = makeStore();
+    const store = makeStore({
+      auth: { status: 'unauthenticated', user: null },
+    });
 
     const result = await store.dispatch(
       authApi.endpoints.login.initiate({ username: 'emilys', password: 'x' }),
@@ -97,9 +101,27 @@ describe('login', () => {
       status: 'unauthenticated',
       user: null,
     });
+    expect(await loadTokens()).toBeNull();
   });
 
-  it('forgets the user on sign out', async () => {
+  it('saves both tokens in the Keychain', async () => {
+    mockFetchOnce(200, LOGIN_RESPONSE);
+    const store = makeStore();
+
+    await store.dispatch(
+      authApi.endpoints.login.initiate({
+        username: 'emilys',
+        password: 'emilyspass',
+      }),
+    );
+
+    expect(await loadTokens()).toEqual({
+      accessToken: 'secret-access-token',
+      refreshToken: 'secret-refresh-token',
+    });
+  });
+
+  it('log out forgets the user and deletes the tokens', async () => {
     mockFetchOnce(200, LOGIN_RESPONSE);
     const store = makeStore();
     await store.dispatch(
@@ -109,12 +131,13 @@ describe('login', () => {
       }),
     );
 
-    store.dispatch(signedOut());
+    await store.dispatch(logout());
 
     expect(store.getState().auth).toEqual({
       status: 'unauthenticated',
       user: null,
     });
+    expect(await loadTokens()).toBeNull();
   });
 });
 

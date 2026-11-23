@@ -9,6 +9,7 @@ import {
 import App from '../App';
 import { makeStore } from '../store';
 import { SPLASH_MIN_MS } from '../EntryFlow';
+import { clearTokens, saveTokens } from '@/features/auth';
 import { hasSeenOnboarding } from '@/features/onboarding';
 
 /** Let the splash timer run out and the storage read settle. */
@@ -22,6 +23,7 @@ describe('App entry flow', () => {
   beforeEach(async () => {
     jest.useFakeTimers();
     await AsyncStorage.clear();
+    await clearTokens();
   });
 
   afterEach(() => {
@@ -102,6 +104,27 @@ describe('App entry flow', () => {
         expect(screen.getByRole('button', { name: 'Log out' })).toBeTruthy(),
       );
       expect(screen.getByText('Emily')).toBeTruthy();
+    });
+
+    it('restores a saved session when the app is reopened', async () => {
+      await AsyncStorage.setItem('wanderlyy/onboarding-seen', 'true');
+      await saveTokens({ accessToken: 'saved', refreshToken: 'saved-r' });
+      mockLoginResponse(200, {
+        id: 1,
+        username: 'emilys',
+        email: 'emily@example.com',
+        firstName: 'Emily',
+        lastName: 'Johnson',
+        image: 'https://dummyjson.com/icon/emilys/128',
+      });
+
+      await render(<App store={makeStore()} />);
+      await finishSplash();
+
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Log out' })).toBeTruthy(),
+      );
+      expect(screen.queryByRole('button', { name: 'Sign in' })).toBeNull();
     });
 
     it('shows an error when the password is wrong', async () => {

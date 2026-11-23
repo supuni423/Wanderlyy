@@ -9,11 +9,29 @@ jest.mock('@react-native-community/netinfo', () =>
   require('@react-native-community/netinfo/jest/netinfo-mock.js'),
 );
 
-jest.mock('react-native-keychain', () => ({
-  setGenericPassword: jest.fn(() => Promise.resolve(true)),
-  getGenericPassword: jest.fn(() => Promise.resolve(false)),
-  resetGenericPassword: jest.fn(() => Promise.resolve(true)),
-}));
+// In-memory Keychain, so tests can save a session and read it back.
+jest.mock('react-native-keychain', () => {
+  const entries = new Map();
+  const key = options => (options && options.service) || 'default';
+  return {
+    ACCESSIBLE: {
+      WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'AccessibleWhenUnlockedThisDeviceOnly',
+    },
+    setGenericPassword: jest.fn((username, password, options) => {
+      entries.set(key(options), { username, password });
+      return Promise.resolve({ service: key(options), storage: 'mock' });
+    }),
+    getGenericPassword: jest.fn(options => {
+      const entry = entries.get(key(options));
+      return Promise.resolve(
+        entry ? { ...entry, service: key(options), storage: 'mock' } : false,
+      );
+    }),
+    resetGenericPassword: jest.fn(options =>
+      Promise.resolve(entries.delete(key(options))),
+    ),
+  };
+});
 
 // SafeAreaProvider waits for native insets before rendering children; the mock supplies them.
 jest.mock(

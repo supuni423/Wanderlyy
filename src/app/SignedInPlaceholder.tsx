@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components';
-import { authApi, selectCurrentUser, signedOut } from '@/features/auth';
+import { logout, selectCurrentUser } from '@/features/auth';
 import { useTheme } from '@/theme';
 import { useAppDispatch, useAppSelector } from './hooks';
 
@@ -14,8 +14,7 @@ export function SignedInPlaceholder() {
   const user = useAppSelector(selectCurrentUser);
 
   const logOut = () => {
-    dispatch(signedOut());
-    dispatch(authApi.util.resetApiState());
+    dispatch(logout());
   };
 
   return (
@@ -30,7 +29,7 @@ export function SignedInPlaceholder() {
       <Text style={[typography.h1, { color: colors.text }]}>
         Hi,{' '}
         <Text style={[typography.accent, { color: colors.primary }]}>
-          {user?.firstName}
+          {user?.firstName ?? 'traveller'}
         </Text>
       </Text>
       <Text
@@ -40,7 +39,8 @@ export function SignedInPlaceholder() {
           { color: colors.textMuted, marginVertical: spacing.md },
         ]}
       >
-        Signed in as @{user?.username}. Countries arrive in the next steps.
+        {user ? `Signed in as @${user.username}.` : 'Signed in (offline).'} Your
+        session is kept safely in the Keychain.
       </Text>
       <AppButton
         title="Log out"
