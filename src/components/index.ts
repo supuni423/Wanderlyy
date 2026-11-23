@@ -10,3 +10,4 @@ export {
 export { ErrorState, type ErrorStateProps } from './ErrorState';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { OfflineBanner, type OfflineBannerProps } from './OfflineBanner';
+export { LabelChip, Polaroid, Sparkle, Stamp, Sticker } from './Scrapbook';

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { useTheme } from '@/theme';
 import type { SlideKey } from '../slides';
-import { LabelChip, Polaroid, Sparkle, Stamp, Sticker } from './Scrapbook';
+import { LabelChip, Polaroid, Sparkle, Stamp, Sticker } from '@/components';
 
 const photos = {
   kyoto: require('@/assets/images/onboarding/kyoto.jpg'),

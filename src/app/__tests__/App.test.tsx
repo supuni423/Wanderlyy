@@ -26,23 +26,35 @@ describe('App entry flow', () => {
     expect(screen.getByLabelText('Wanderlyy is loading')).toBeTruthy();
   });
 
-  it('shows the intro on first launch and remembers it was seen', async () => {
+  it('shows the intro on first launch, then the login screen', async () => {
     await render(<App />);
     await finishSplash();
 
     expect(screen.getByLabelText('Skip intro')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Skip intro'));
 
-    expect(screen.getByText('Replay intro')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
     expect(await hasSeenOnboarding()).toBe(true);
   });
 
-  it('skips the intro when it was already seen', async () => {
+  it('goes straight to login when the intro was already seen', async () => {
     await AsyncStorage.setItem('wanderlyy/onboarding-seen', 'true');
     await render(<App />);
     await finishSplash();
 
     expect(screen.queryByLabelText('Skip intro')).toBeNull();
-    expect(screen.getByText('Replay intro')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
+  });
+
+  it('switches between login and registration', async () => {
+    await AsyncStorage.setItem('wanderlyy/onboarding-seen', 'true');
+    await render(<App />);
+    await finishSplash();
+
+    await fireEvent.press(screen.getByRole('link'));
+    expect(screen.getByRole('button', { name: 'Create account' })).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('link'));
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
   });
 });
