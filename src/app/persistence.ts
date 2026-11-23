@@ -4,7 +4,8 @@ import type { PersistConfig, PersistedState } from 'redux-persist';
 /**
  * What is saved to AsyncStorage (and what is not).
  *
- * Saved:     favourites (whole slice), auth.user (public profile only)
+ * Saved:     favourites (whole slice), countriesCache (offline copy of
+ *            the country list + viewed details), auth.user (profile only)
  * Not saved: auth.status (recomputed at start-up), API caches,
  *            and NEVER the access/refresh tokens (they live in the Keychain).
  */
@@ -25,13 +26,49 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 /**
  * Cleans a stored root state before it is loaded, so a damaged or old
- * save can never crash the app: broken favourites are dropped, and a
- * favourites slice that is not the expected shape is reset to empty.
+ * save can never crash the app: broken favourites and cache entries are
+ * dropped, and a slice that is not the expected shape is reset to empty.
  */
 export function sanitizePersistedState(state: Stored): Stored {
   if (!state) {
     return state;
   }
+  return sanitizeCountriesCache(sanitizeFavourites(state));
+}
+
+/** A damaged offline cache is simply dropped; it refills when online. */
+function sanitizeCountriesCache(state: Stored): Stored {
+  const cache = state.countriesCache;
+  if (cache === undefined) {
+    return state;
+  }
+  const empty = { list: null, details: {} };
+  if (!isObject(cache)) {
+    return { ...state, countriesCache: empty };
+  }
+  const list =
+    isObject(cache.list) &&
+    Array.isArray(cache.list.data) &&
+    typeof cache.list.savedAt === 'number'
+      ? cache.list
+      : null;
+  const details: Record<string, unknown> = {};
+  if (isObject(cache.details)) {
+    for (const [code, entry] of Object.entries(cache.details)) {
+      if (
+        isObject(entry) &&
+        isObject(entry.data) &&
+        entry.data.code === code &&
+        typeof entry.savedAt === 'number'
+      ) {
+        details[code] = entry;
+      }
+    }
+  }
+  return { ...state, countriesCache: { list, details } };
+}
+
+function sanitizeFavourites(state: Stored): Stored {
   const favourites = state.favourites;
   if (favourites === undefined) {
     return state;
@@ -65,7 +102,7 @@ export const rootPersistConfig = {
   storage: AsyncStorage,
   version: PERSIST_VERSION,
   // auth has its own nested config (above) so only `user` is saved.
-  whitelist: ['favourites'],
+  whitelist: ['favourites', 'countriesCache'],
   migrate: async (state: PersistedState) =>
     sanitizePersistedState(state as Stored),
 } satisfies Partial<PersistConfig<unknown>>;

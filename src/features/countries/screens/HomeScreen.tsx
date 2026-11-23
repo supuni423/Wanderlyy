@@ -17,6 +17,8 @@ import {
 import { useDebouncedValue } from '@/hooks';
 import { useAppSelector } from '@/app/hooks';
 import { selectCurrentUser } from '@/features/auth';
+import { selectCachedCountryList } from '@/features/offline';
+import { formatTimeAgo } from '@/utils/format';
 import type { HomeStackScreenProps } from '@/navigation/types';
 import { useTheme } from '@/theme';
 import { useGetCountriesQuery } from '../countriesApi';
@@ -29,13 +31,24 @@ import type { CountrySummary } from '../types';
 /**
  * Home tab: every country as a card. Handles the four list states the
  * assignment asks for: loading, error (with retry), empty and data.
+ * Offline-first: the last saved list is shown while loading or offline,
+ * so loading/error screens only appear when nothing was ever saved.
  * Search (debounced) and region chips narrow the list. Pull to refresh.
  */
 export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
   const { colors, typography, spacing } = useTheme();
   const user = useAppSelector(selectCurrentUser);
-  const { data, error, isLoading, isFetching, refetch } =
-    useGetCountriesQuery();
+  const {
+    data: live,
+    error,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetCountriesQuery();
+  // Offline-first: fall back to the saved copy when there is no live data.
+  const cached = useAppSelector(selectCachedCountryList);
+  const data = live ?? cached?.data;
+  const showingSavedCopy = !live && !!cached;
 
   const [query, setQuery] = useState('');
   const [region, setRegion] = useState<RegionFilter>('All');
@@ -96,6 +109,9 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
           {isFiltered
             ? `${countries.length} of ${data.length} countries`
             : `${data.length} countries to explore`}
+          {showingSavedCopy && cached
+            ? ` · saved ${formatTimeAgo(cached.savedAt)}`
+            : ''}
         </Text>
       )}
     </View>
@@ -116,7 +132,7 @@ export function HomeScreen({ navigation }: HomeStackScreenProps<'Countries'>) {
   );
 
   let content;
-  if (isLoading) {
+  if (isLoading && !data) {
     content = <LoadingIndicator message="Finding countries…" />;
   } else if (error && !data) {
     content = (

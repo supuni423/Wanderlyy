@@ -5,6 +5,7 @@ import {
   formatList,
   formatNumber,
   formatPopulation,
+  formatTimeAgo,
 } from '../format';
 
 describe('formatNumber', () => {
@@ -53,5 +54,20 @@ describe('other formatters', () => {
   it('prefixes calling codes with +', () => {
     expect(formatCallingCodes(['81'])).toBe('+81');
     expect(formatCallingCodes(['+1', '44'])).toBe('+1, +44');
+  });
+});
+
+describe('formatTimeAgo', () => {
+  const NOW = 1_700_000_000_000;
+  const MIN = 60_000;
+  it.each([
+    [NOW - 10_000, 'just now'],
+    [NOW - 5 * MIN, '5 min ago'],
+    [NOW - 3 * 60 * MIN, '3 h ago'],
+    [NOW - 26 * 60 * MIN, 'yesterday'],
+    [NOW - 4 * 24 * 60 * MIN, '4 days ago'],
+    [NOW + 5 * MIN, 'just now'],
+  ])('%p -> %p', (timestamp, expected) => {
+    expect(formatTimeAgo(timestamp, NOW)).toBe(expected);
   });
 });

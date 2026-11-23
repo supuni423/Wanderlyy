@@ -9,6 +9,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ErrorState, LoadingIndicator } from '@/components';
 import { FavouriteButton } from '@/features/favourites/components/FavouriteButton';
 import type { CountryDetailsParams } from '@/navigation/types';
+import {
+  selectCachedCountryDetails,
+  selectCachedCountryList,
+} from '@/features/offline';
+import { useAppSelector } from '@/app/hooks';
 import { useTheme } from '@/theme';
 import {
   formatArea,
@@ -16,6 +21,7 @@ import {
   formatCompact,
   formatList,
   formatPopulation,
+  formatTimeAgo,
 } from '@/utils/format';
 import { countriesApi, useGetCountryByCodeQuery } from '../countriesApi';
 import { getCountriesErrorMessage } from '../countriesErrors';
@@ -45,11 +51,27 @@ export function CountryDetailsScreen() {
   const { colors, typography, spacing } = useTheme();
   const code = params.code;
 
-  const { data, error, isLoading, isFetching, refetch } =
-    useGetCountryByCodeQuery(code);
+  const {
+    data: live,
+    error,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetCountryByCodeQuery(code);
 
-  // Read the Home list from the cache only (never triggers a request).
-  const { data: list } = countriesApi.endpoints.getCountries.useQueryState();
+  // Offline-first: use the saved copy of this page if there is no live one.
+  const cachedDetails = useAppSelector(state =>
+    selectCachedCountryDetails(state, code),
+  );
+  const data = live ?? cachedDetails?.data;
+  const showingSavedCopy = !live && !!cachedDetails;
+
+  // The Home list (live from RTK Query's cache, else the saved copy) gives
+  // the flag and name instantly. Reading it never triggers a request.
+  const { data: liveList } =
+    countriesApi.endpoints.getCountries.useQueryState();
+  const cachedList = useAppSelector(selectCachedCountryList);
+  const list = liveList ?? cachedList?.data;
   const summary = data ?? list?.find(c => c.code === code);
 
   useLayoutEffect(() => {
@@ -147,6 +169,19 @@ export function CountryDetailsScreen() {
           tone={colors.accentGreen}
         />
       </View>
+
+      {showingSavedCopy && cachedDetails && (
+        <Text
+          style={[
+            typography.caption,
+            typography.accent,
+            styles.center,
+            { color: colors.textMuted },
+          ]}
+        >
+          Saved copy from {formatTimeAgo(cachedDetails.savedAt)}
+        </Text>
+      )}
 
       {/* Keep the flag and stats from the list; only the facts show the error. */}
       {loadError ? (
